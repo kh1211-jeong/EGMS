@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ app_title or "EGMS" }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg-body: #020617;
+      --bg-panel: #020617;
+      --bg-card: #020617;
+      --bg-card-soft: #020617;
+      --border-subtle: rgba(148, 163, 184, 0.45);
+      --accent-primary: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.12);
+      --accent-strong: #0ea5e9;
+      --text-primary: #e5e7eb;
+      --text-muted: #9ca3af;
+      --text-soft: #6b7280;
+      --nav-width: 260px;
+      --radius-xl: 26px;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top, #0f172a 0, #020617 45%, #000 100%),
+        #000;
+      color: var(--text-primary);
+      display: flex;
+    }
+
+    /* === 전체 레이아웃 === */
+    .app-root {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: var(--nav-width);
+      padding: 28px 22px 22px;
+      border-right: 1px solid rgba(30, 64, 175, 0.6);
+      background: radial-gradient(circle at top left, #0b1120 0, #020617 40%, #020617 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .sidebar-header {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #e0f2fe 0, #38bdf8 40%, #1d4ed8 100%);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.9);
+    }
+
+    .brand-text-main {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+    }
+
+    .brand-text-sub {
+      font-size: 11px;
+      margin-top: 2px;
+      color: var(--text-soft);
+    }
+
+    .sidebar-section-title {
+      margin-top: 24px;
+      margin-bottom: 10px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-soft);
+    }
+
+    .nav-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav-item {
+      width: 100%;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: all 0.16s ease-out;
+    }
+
+    .nav-link-icon {
+      width: 16px;
+      text-align: center;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    .nav-link:hover {
+      background: rgba(15, 23, 42, 0.9);
+      border-color: rgba(148, 163, 184, 0.6);
+      color: #e5e7eb;
+    }
+
+    .nav-link.active {
+      background: rgba(15, 23, 42, 0.95);
+      border-color: rgba(56, 189, 248, 0.9);
+      color: #e5e7eb;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.9), 0 0 32px rgba(56, 189, 248, 0.25);
+    }
+
+    .nav-link.active .nav-link-icon {
+      color: var(--accent-primary);
+    }
+
+    .sidebar-footer {
+      margin-top: 30px;
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .env-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(52, 211, 153, 0.7);
+      background: radial-gradient(circle at 30% 20%, rgba(16, 185, 129, 0.2), rgba(15, 23, 42, 0.9));
+      color: #bbf7d0;
+      margin-bottom: 8px;
+    }
+
+    .env-pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+    }
+
+    /* === 메인 영역 === */
+    .main {
+      flex: 1;
+      padding: 26px 32px 32px;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .main-shell {
+      width: 100%;
+      max-width: 1360px;
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(30, 64, 175, 0.7);
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.98));
+      box-shadow:
+        0 40px 120px rgba(15, 23, 42, 0.95),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      padding: 28px 40px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .shell-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .shell-badge-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .shell-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid rgba(96, 165, 250, 0.7);
+      background: linear-gradient(90deg, rgba(37, 99, 235, 0.14), rgba(56, 189, 248, 0.18));
+      color: #bfdbfe;
+    }
+
+    .shell-badge-secondary {
+      border-color: rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.92);
+      color: var(--text-soft);
+    }
+
+    .shell-title {
+      font-size: 30px;
+      letter-spacing: 0.45em;
+      text-indent: 0.45em;
+      font-weight: 700;
+    }
+
+    .shell-subtitle {
+      font-size: 12px;
+      color: var(--text-soft);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .shell-body {
+      flex: 1;
+      border-radius: 22px;
+      border: 1px solid var(--border-subtle);
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 1));
+      padding: 22px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* content 영역은 각 탭 템플릿이 채움 */
+    .content-scroll {
+      flex: 1;
+      overflow: auto;
+    }
+
+    /* 공통 버튼 스타일 */
+    .btn {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-primary);
+      padding: 7px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.16s ease-out;
+    }
+
+    .btn-primary {
+      border-color: rgba(56, 189, 248, 0.9);
+      background: radial-gradient(circle at top left, #38bdf8, #0ea5e9);
+      color: #0b1220;
+      box-shadow:
+        0 0 0 1px rgba(15, 23, 42, 0.9),
+        0 18px 40px rgba(56, 189, 248, 0.45);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.05);
+      transform: translateY(-0.5px);
+      box-shadow:
+        0 0 0 1px rgba(15, 23, 42, 0.9),
+        0 22px 52px rgba(56, 189, 248, 0.55);
+    }
+
+    .btn-ghost {
+      background: rgba(15, 23, 42, 0.96);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(30, 64, 175, 0.4);
+      border-color: rgba(148, 163, 184, 0.9);
+    }
+
+    /* 간단한 테이블 기본값 (설비/신호 탭 공통용) */
+    table.egms-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      color: #e5e7eb;
+    }
+
+    table.egms-table thead {
+      background: rgba(15, 23, 42, 0.96);
+    }
+
+    table.egms-table th,
+    table.egms-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(55, 65, 81, 0.9);
+      white-space: nowrap;
+    }
+
+    table.egms-table th {
+      font-size: 11px;
+      color: var(--text-soft);
+      text-align: left;
+    }
+
+    table.egms-table tr:nth-child(even) td {
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    table.egms-table tr:hover td {
+      background: rgba(30, 64, 175, 0.6);
+    }
+
+    input.table-input {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.98);
+      color: #e5e7eb;
+      padding: 4px 6px;
+      font-size: 12px;
+    }
+
+    input.table-input:focus {
+      outline: none;
+      border-color: rgba(56, 189, 248, 0.9);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
+    }
+
+    /* 반응형 최소 대응 */
+    @media (max-width: 1024px) {
+      .sidebar {
+        display: none; /* 파일럿: 모바일은 좌측 숨김 */
+      }
+      .main {
+        padding: 16px;
+      }
+      .main-shell {
+        padding: 20px 18px 22px;
+      }
+      .shell-title {
+        font-size: 22px;
+      }
+    }
+  </style>
+
+  {% block head_extras %}{% endblock %}
+</head>
+<body>
+  <div class="app-root">
+    <!-- 좌측 사이드바 -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-row">
+          <div class="brand-dot"></div>
+          <div>
+            <div class="brand-text-main">EGMS</div>
+            <div class="brand-text-sub">GRID MONITORING SHELL</div>
+          </div>
+        </div>
+
+        <div class="sidebar-section-title">NAVIGATION</div>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="/" class="nav-link {% if current_page == 'home' %}active{% endif %}">
+              <span class="nav-link-icon">🏠</span>
+              <span>Home</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="/ui/topology" class="nav-link {% if current_page == 'topology' %}active{% endif %}">
+              <span class="nav-link-icon">🕸️</span>
+              <span>연결 정보</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="/ui/equipment" class="nav-link {% if current_page == 'equipment' %}active{% endif %}">
+              <span class="nav-link-icon">📁</span>
+              <span>설비 관리</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link {% if current_page == 'settings' %}active{% endif %}">
+              <span class="nav-link-icon">⚙️</span>
+              <span>Settings</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="env-pill">
+          <span class="env-pill-dot"></span>
+          <span>EGMS pilot · local</span>
+        </div>
+        <div>Logged out · 로그인 기능은 이 화면에서 구성 예정</div>
+      </div>
+    </aside>
+
+    <!-- 메인 영역 -->
+    <main class="main">
+      <section class="main-shell">
+        <header class="shell-header">
+          <div class="shell-badge-row">
+            <div class="shell-badge">
+              <span>EGMS {{ header_badge or '' }}</span>
+            </div>
+            <div class="shell-badge shell-badge-secondary">
+              <span>prototype · v0.1</span>
+            </div>
+          </div>
+          <div class="shell-title">EGMS</div>
+          <div class="shell-subtitle">ENERGY GRID MONITORING SYSTEM</div>
+        </header>
+
+        <div class="shell-body">
+          <!-- 각 탭에서 실제 내용을 채우는 영역 -->
+          <div class="content-scroll">
+            {% block content %}{% endblock %}
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

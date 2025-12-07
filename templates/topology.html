@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+
+{% block head_extras %}
+<style>
+  .topology-intro {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.7;
+    margin-bottom: 12px;
+  }
+  .topology-intro b {
+    color: #e5e7eb;
+  }
+
+  .topology-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 4px;
+  }
+
+  /* 검색 툴바 */
+  .topology-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .topology-search-select,
+  .topology-search-input,
+  .topology-search-button {
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.6);
+    background: rgba(15, 23, 42, 0.9);
+    color: #e5e7eb;
+    font-size: 12px;
+    padding: 6px 10px;
+    outline: none;
+  }
+  .topology-search-select {
+    min-width: 90px;
+  }
+  .topology-search-input {
+    flex: 1;
+  }
+  .topology-search-button {
+    padding-inline: 14px;
+    background: linear-gradient(to right, #38bdf8, #6366f1);
+    border-color: transparent;
+    cursor: pointer;
+  }
+  .topology-search-button:hover {
+    opacity: 0.9;
+  }
+
+  /* 상단 트리 영역(드래그로 이동, 스크롤바 없음) */
+  .topology-graph-shell {
+    border-radius: 18px;
+    border: 1px solid rgba(55, 65, 81, 0.9);
+    background: radial-gradient(circle at top, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 1));
+    height: 320px;
+    padding: 18px 24px;
+    overflow: hidden;           /* 테두리 밖으로 안 나가도록 */
+    position: relative;
+    cursor: grab;
+  }
+  .topology-graph-shell.dragging {
+    cursor: grabbing;
+  }
+  .topology-graph {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  .topology-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: visible;
+  }
+
+  /* 노드 / 엣지 스타일 */
+  .topology-node-circle {
+    fill: #38bdf8;
+    stroke: #e0f2fe;
+    stroke-width: 1;
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.8));
+  }
+  .topology-node-label {
+    font-size: 11px;
+    fill: #e5e7eb;
+  }
+  .topology-edge-line {
+    stroke: rgba(148, 163, 184, 0.9);
+    stroke-width: 1;
+  }
+
+  /* 검색 하이라이트 */
+  .topology-node--highlight .topology-node-circle {
+    fill: #f97316;
+    stroke: #fed7aa;
+    filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.9));
+  }
+  .topology-node--highlight .topology-node-label {
+    fill: #fed7aa;
+    font-weight: 600;
+  }
+  .topology-edge--highlight {
+    stroke: #f97316;
+    stroke-width: 2;
+  }
+
+  .topology-status-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* 하단 검색 결과 + 노드 리스트 박스 (스크롤바) */
+  .topology-result-shell {
+    border-radius: 18px;
+    border: 1px solid rgba(55, 65, 81, 0.9);
+    background: rgba(15, 23, 42, 0.95);
+    max-height: 300px;
+    padding: 12px 18px;
+    overflow-y: auto;
+  }
+  .topology-node-list {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .topology-node-list b {
+    color: #e5e7eb;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="topology-layout">
+
+    <div class="topology-toolbar">
+      <select id="topology-search-key" class="topology-search-select">
+        <option value="id">EQP_NO</option>
+        <option value="label">EQP_NAME</option>
+      </select>
+      <input
+        id="topology-search-input"
+        class="topology-search-input"
+        type="text"
+        placeholder="설비 번호 또는 이름을 입력하십시오."
+      />
+      <button id="topology-search-button" class="topology-search-button">
+        검색
+      </button>
+    </div>
+
+    <div class="topology-graph-shell" id="topology-shell">
+      <div id="topology-graph" class="topology-graph">
+        <svg id="topology-svg" class="topology-svg"></svg>
+      </div>
+    </div>
+
+    <div class="topology-status-text" id="topology-status">
+      토폴로지 정보를 가져오지 못했습니다.
+    </div>
+
+    <div class="topology-result-shell">
+      <div class="topology-node-list" id="topology-node-list"></div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (async function loadTopology() {
+    const statusEl   = document.getElementById("topology-status");
+    const graphShell = document.getElementById("topology-shell");
+    const svgEl      = document.getElementById("topology-svg");
+    const listEl     = document.getElementById("topology-node-list");
+
+    const searchKeyEl   = document.getElementById("topology-search-key");
+    const searchInputEl = document.getElementById("topology-search-input");
+    const searchBtnEl   = document.getElementById("topology-search-button");
+
+    statusEl.textContent = "토폴로지 정보를 불러오는 중입니다...";
+
+    try {
+      const res = await fetch("/api/topology");
+      if (!res.ok) {
+        statusEl.textContent = "토폴로지 정보를 가져오지 못했습니다.";
+        return;
+      }
+
+      const data  = await res.json();
+      const nodes = data.nodes || [];
+      const edges = data.edges || [];
+
+      if (!nodes.length) {
+        statusEl.textContent = "표시할 노드가 없습니다.";
+        return;
+      }
+
+      statusEl.textContent =
+        `노드 ${nodes.length}개 · 엣지 ${edges.length}개를 불러왔습니다.`;
+
+      // ----- 트리 구조 만들기 -----
+      const nodeById = {};
+      nodes.forEach(n => { nodeById[n.id] = n; });
+
+      const childrenMap = {};
+      const parentMap   = {};
+      nodes.forEach(n => { childrenMap[n.id] = []; });
+
+      edges.forEach(e => {
+        if (childrenMap[e.source]) {
+          childrenMap[e.source].push(e.target);
+          if (parentMap[e.target] == null) parentMap[e.target] = e.source;
+        }
+      });
+
+      const indegree = {};
+      nodes.forEach(n => { indegree[n.id] = 0; });
+      edges.forEach(e => {
+        if (indegree[e.target] != null) indegree[e.target] += 1;
+      });
+
+      const roots = nodes.filter(n => indegree[n.id] === 0);
+      const treeRoots = roots.length ? roots : [nodes[0]];
+
+      // ----- 좌표 계산 (전하께서 주신 코드 기반) -----
+      const xGap = 80;
+      const yGap = 70;
+      const positions = {};
+      let leafIndex = 0;
+
+      function assignPos(id, depth) {
+        const childs = childrenMap[id] || [];
+        let x;
+
+        if (!childs.length) {
+          x = leafIndex * xGap;
+          leafIndex += 1;
+        } else {
+          const xs = [];
+          childs.forEach(childId => {
+            assignPos(childId, depth + 1);
+            xs.push(positions[childId].x);
+          });
+          const sum = xs.reduce((a, b) => a + b, 0);
+          x = sum / xs.length;
+        }
+
+        positions[id] = { x, y: depth * yGap };
+      }
+
+      treeRoots.forEach(root => assignPos(root.id, 0));
+
+      const xs = Object.values(positions).map(p => p.x);
+      const ys = Object.values(positions).map(p => p.y);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+      const maxY = Math.max(...ys);
+
+      const padding = 40;
+      const width  = (maxX - minX) + padding * 2;
+      const height = (maxY - minY) + padding * 2;
+
+      svgEl.setAttribute("width", width);
+      svgEl.setAttribute("height", height);
+      svgEl.innerHTML = "";
+
+      function ax(x) { return x - minX + padding; }
+      function ay(y) { return y - minY + padding; }
+
+      const nodePositionsPixel = {};
+
+      // ----- 엣지 그리기 -----
+      edges.forEach(e => {
+        const sPos = positions[e.source];
+        const tPos = positions[e.target];
+        if (!sPos || !tPos) return;
+
+        const x1 = ax(sPos.x);
+        const y1 = ay(sPos.y);
+        const x2 = ax(tPos.x);
+        const y2 = ay(tPos.y);
+
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+        line.setAttribute("class", "topology-edge-line topology-edge");
+        line.setAttribute("data-edge-source", e.source);
+        line.setAttribute("data-edge-target", e.target);
+        svgEl.appendChild(line);
+      });
+
+      // ----- 노드 그리기 -----
+      const radius = 10;
+
+      nodes.forEach(n => {
+        const pos = positions[n.id];
+        if (!pos) return;
+
+        const cx = ax(pos.x);
+        const cy = ay(pos.y);
+        nodePositionsPixel[n.id] = { x: cx, y: cy };
+
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute("data-node-id", n.id);
+        g.classList.add("topology-node");
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", cx);
+        circle.setAttribute("cy", cy);
+        circle.setAttribute("r", radius);
+        circle.setAttribute("class", "topology-node-circle");
+        g.appendChild(circle);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", cx);
+        text.setAttribute("y", cy + radius + 12);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("class", "topology-node-label");
+        text.textContent = n.label;
+        g.appendChild(text);
+
+        svgEl.appendChild(g);
+      });
+
+      // ----- 초기 위치를 중앙에 배치 (드래그 기준 원점) -----
+      let translateX = graphShell.clientWidth  / 2 - width  / 2;
+      let translateY = graphShell.clientHeight / 2 - height / 2;
+      function applyTransform() {
+        svgEl.style.transform = `translate(${translateX}px, ${translateY}px)`;
+      }
+      applyTransform();
+
+      // ----- 노드 리스트 텍스트 -----
+      const lines = nodes.map(n => {
+        const cat = n.category || "";
+        return `· <b>${n.id}</b> : ${n.label} · <span style="color:#a5b4fc;">${cat}</span>`;
+      });
+      listEl.innerHTML =
+        `노드 ${nodes.length}개 · 엣지 ${edges.length}개를 불러왔습니다.<br />` +
+        lines.join("<br />");
+
+      // ----- 드래그로 트리 이동 -----
+      let isDragging = false;
+      let dragStartX = 0;
+      let dragStartY = 0;
+      let startTX = 0;
+      let startTY = 0;
+
+      graphShell.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        graphShell.classList.add("dragging");
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        startTX = translateX;
+        startTY = translateY;
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+        translateX = startTX + dx;
+        translateY = startTY + dy;
+        applyTransform();
+      });
+
+      window.addEventListener("mouseup", () => {
+        isDragging = false;
+        graphShell.classList.remove("dragging");
+      });
+      graphShell.addEventListener("mouseleave", () => {
+        isDragging = false;
+        graphShell.classList.remove("dragging");
+      });
+
+      // ----- 하이라이트 초기화 -----
+      function clearHighlight() {
+        svgEl
+          .querySelectorAll(".topology-node--highlight")
+          .forEach(el => el.classList.remove("topology-node--highlight"));
+        svgEl
+          .querySelectorAll(".topology-edge--highlight")
+          .forEach(el => el.classList.remove("topology-edge--highlight"));
+      }
+
+      // ----- 루트까지 경로 하이라이트 + 해당 노드 중앙 배치 -----
+      function highlightPath(targetId) {
+        clearHighlight();
+
+        const path = [];
+        let cur = targetId;
+        const visited = new Set();
+        while (cur && !visited.has(cur)) {
+          visited.add(cur);
+          path.push(cur);
+          cur = parentMap[cur];
+        }
+        path.reverse();
+
+        path.forEach(id => {
+          const g = svgEl.querySelector(`.topology-node[data-node-id="${id}"]`);
+          if (g) g.classList.add("topology-node--highlight");
+        });
+
+        for (let i = 0; i < path.length - 1; i++) {
+          const src = path[i];
+          const dst = path[i + 1];
+          const line = svgEl.querySelector(
+            `.topology-edge[data-edge-source="${src}"][data-edge-target="${dst}"]`
+          );
+          if (line) line.classList.add("topology-edge--highlight");
+        }
+
+        const pos = nodePositionsPixel[targetId];
+        if (pos) {
+          translateX = graphShell.clientWidth  / 2 - pos.x;
+          translateY = graphShell.clientHeight / 2 - pos.y;
+          applyTransform();
+        }
+      }
+
+      // ----- 검색 처리 -----
+      function handleSearch() {
+        const key = searchKeyEl.value;  // "id" or "label"
+        const qRaw = searchInputEl.value || "";
+        const q = qRaw.trim();
+        if (!q) {
+          clearHighlight();
+          statusEl.textContent =
+            `노드 ${nodes.length}개 · 엣지 ${edges.length}개를 불러왔습니다. (검색어 없음)`;
+          return;
+        }
+
+        const lowerQ = q.toLowerCase();
+        let target = null;
+
+        if (key === "id") {
+          target = nodes.find(n => (n.id || "").toLowerCase().includes(lowerQ));
+        } else {
+          target = nodes.find(n => (n.label || "").toLowerCase().includes(lowerQ));
+        }
+
+        if (!target) {
+          clearHighlight();
+          statusEl.textContent = `검색 결과가 없습니다: "${q}"`;
+          return;
+        }
+
+        highlightPath(target.id);
+        statusEl.textContent =
+          `노드 ${nodes.length}개 · 엣지 ${edges.length}개 중 "${q}"에 해당하는 설비를 강조 표시했습니다.`;
+      }
+
+      searchBtnEl.addEventListener("click", handleSearch);
+      searchInputEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleSearch();
+      });
+
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "토폴로지 정보를 불러오는 중 오류가 발생했습니다.";
+    }
+  })();
+</script>
+{% endblock %}

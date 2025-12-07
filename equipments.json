@@ -1,0 +1,482 @@
+[
+  {
+    "eqp_no": "EQP_INCOMING_1",
+    "eqp_name": "인입선로 #1",
+    "type": "incoming_line",
+    "building": "본관",
+    "location": "수전설비실",
+    "parent_eqp_no": ""
+  },
+  {
+    "eqp_no": "EQP_GCB_1",
+    "eqp_name": "초고압 GCB #1",
+    "type": "gcb_ehv",
+    "building": "본관",
+    "location": "수전설비실",
+    "parent_eqp_no": "EQP_INCOMING_1"
+  },
+  {
+    "eqp_no": "EQP_TR_EHV_1",
+    "eqp_name": "초고압 변압기 BTR #1",
+    "type": "tr_ehv",
+    "building": "본관",
+    "location": "수변전실",
+    "parent_eqp_no": "EQP_GCB_1"
+  },
+  {
+    "eqp_no": "EQP_VCB_MAIN_1",
+    "eqp_name": "메인 VCB #1",
+    "type": "vcb_main",
+    "building": "본관",
+    "location": "수변전실",
+    "parent_eqp_no": "EQP_TR_EHV_1"
+  },
+  {
+    "eqp_no": "EQP_VCB_FEED_A1",
+    "eqp_name": "배전 VCB A계통 #1",
+    "type": "vcb_feeder",
+    "building": "본관",
+    "location": "분전반실 A",
+    "parent_eqp_no": "EQP_VCB_MAIN_1"
+  },
+  {
+    "eqp_no": "EQP_VCB_FEED_B1",
+    "eqp_name": "배전 VCB B계통 #1",
+    "type": "vcb_feeder",
+    "building": "본관",
+    "location": "분전반실 B",
+    "parent_eqp_no": "EQP_VCB_MAIN_1"
+  },
+  {
+    "eqp_no": "EQP_PANEL_MCCA_1",
+    "eqp_name": "MCC Panel A1",
+    "type": "panel_mcc",
+    "building": "본관",
+    "location": "분전반실 A",
+    "parent_eqp_no": "EQP_VCB_FEED_A1"
+  },
+  {
+    "eqp_no": "EQP_PANEL_MCCB_1",
+    "eqp_name": "MCC Panel B1",
+    "type": "panel_mcc",
+    "building": "본관",
+    "location": "분전반실 B",
+    "parent_eqp_no": "EQP_VCB_FEED_B1"
+  },
+  {
+    "eqp_no": "EQP_LOAD_PUMP_1",
+    "eqp_name": "생산용 펌프 #1",
+    "type": "load_pump",
+    "building": "공장동1",
+    "location": "1F 생산라인",
+    "parent_eqp_no": "EQP_PANEL_MCCA_1"
+  },
+  {
+    "eqp_no": "EQP_LOAD_PUMP_2",
+    "eqp_name": "생산용 펌프 #2",
+    "type": "load_pump",
+    "building": "공장동1",
+    "location": "1F 생산라인",
+    "parent_eqp_no": "EQP_PANEL_MCCA_1"
+  },
+  {
+    "eqp_no": "EQP_LOAD_FAN_1",
+    "eqp_name": "배기팬 #1",
+    "type": "load_fan",
+    "building": "공장동1",
+    "location": "2F 설비층",
+    "parent_eqp_no": "EQP_PANEL_MCCB_1"
+  },
+  {
+    "eqp_no": "EQP_LOAD_FAN_2",
+    "eqp_name": "배기팬 #2",
+    "type": "load_fan",
+    "building": "공장동1",
+    "location": "2F 설비층",
+    "parent_eqp_no": "EQP_PANEL_MCCB_1"
+  },
+  {
+    "eqp_no": "EQP_TR_LV_1",
+    "eqp_name": "저압 변압기 TR-LV #1",
+    "type": "tr_lv",
+    "building": "본관",
+    "location": "전기실",
+    "parent_eqp_no": "EQP_VCB_MAIN_1"
+  },
+  {
+    "eqp_no": "EQP_PANEL_ESS_1",
+    "eqp_name": "ESS Panel #1",
+    "type": "panel_ess",
+    "building": "본관",
+    "location": "전기실",
+    "parent_eqp_no": "EQP_TR_LV_1"
+  },
+  {
+    "eqp_no": "EQP_LOAD_ESS_1",
+    "eqp_name": "ESS PCS #1",
+    "type": "load_ess",
+    "building": "별관",
+    "location": "ESS실",
+    "parent_eqp_no": "EQP_PANEL_ESS_1"
+  },
+  {
+    "eqp_no": "EQP_INCOMING_2",
+    "eqp_name": "인입선로 #2",
+    "type": "incoming_line",
+    "building": "본관",
+    "location": "수전설비실",
+    "parent_eqp_no": ""
+  },
+  {
+    "eqp_no": "EQP_GCB_2",
+    "eqp_name": "초고압 GCB #2",
+    "type": "gcb_ehv",
+    "building": "본관",
+    "location": "수전설비실",
+    "parent_eqp_no": "EQP_INCOMING_2"
+  },
+  {
+    "eqp_no": "EQP_TR_EHV_2",
+    "eqp_name": "초고압 변압기 BTR #2",
+    "type": "tr_ehv",
+    "building": "본관",
+    "location": "수변전실",
+    "parent_eqp_no": "EQP_GCB_2"
+  },
+  {
+    "eqp_no": "EQP_VCB_MAIN_2",
+    "eqp_name": "메인 VCB #2",
+    "type": "vcb_main",
+    "building": "본관",
+    "location": "수변전실",
+    "parent_eqp_no": "EQP_TR_EHV_2"
+  },
+  {
+    "eqp_no": "EQP_VCB_FEED_A2",
+    "eqp_name": "배전 VCB A계통 #2",
+    "type": "vcb_feeder",
+    "building": "본관",
+    "location": "분전반실 A",
+    "parent_eqp_no": "EQP_VCB_MAIN_2"
+  },
+  {
+    "eqp_no": "EQP_VCB_FEED_B2",
+    "eqp_name": "배전 VCB B계통 #2",
+    "type": "vcb_feeder",
+    "building": "본관",
+    "location": "분전반실 B",
+    "parent_eqp_no": "EQP_VCB_MAIN_2"
+  },
+  {
+    "eqp_no": "EQP_PANEL_MCCA_2",
+    "eqp_name": "MCC Panel A2",
+    "type": "panel_mcc",
+    "building": "본관",
+    "location": "분전반실 A",
+    "parent_eqp_no": "EQP_VCB_FEED_A2"
+  },
+  {
+    "eqp_no": "EQP_PANEL_MCCB_2",
+    "eqp_name": "MCC Panel B2",
+    "type": "panel_mcc",
+    "building": "본관",
+    "location": "분전반실 B",
+    "parent_eqp_no": "EQP_VCB_FEED_B2"
+  },
+  {
+    "eqp_no": "EQP_LOAD_PUMP_3",
+    "eqp_name": "생산용 펌프 #3",
+    "type": "load_pump",
+    "building": "공장동2",
+    "location": "1F 생산라인",
+    "parent_eqp_no": "EQP_PANEL_MCCA_2"
+  },
+  {
+    "eqp_no": "EQP_LOAD_PUMP_4",
+    "eqp_name": "생산용 펌프 #4",
+    "type": "load_pump",
+    "building": "공장동2",
+    "location": "1F 생산라인",
+    "parent_eqp_no": "EQP_PANEL_MCCA_2"
+  },
+  {
+    "eqp_no": "EQP_LOAD_FAN_3",
+    "eqp_name": "배기팬 #3",
+    "type": "load_fan",
+    "building": "공장동2",
+    "location": "2F 설비층",
+    "parent_eqp_no": "EQP_PANEL_MCCB_2"
+  },
+  {
+    "eqp_no": "EQP_LOAD_FAN_4",
+    "eqp_name": "배기팬 #4",
+    "type": "load_fan",
+    "building": "공장동2",
+    "location": "2F 설비층",
+    "parent_eqp_no": "EQP_PANEL_MCCB_2"
+  },
+  {
+    "eqp_no": "EQP_TR_LV_2",
+    "eqp_name": "저압 변압기 TR-LV #2",
+    "type": "tr_lv",
+    "building": "본관",
+    "location": "전기실",
+    "parent_eqp_no": "EQP_VCB_MAIN_2"
+  },
+  {
+    "eqp_no": "EQP_PANEL_ESS_2",
+    "eqp_name": "ESS Panel #2",
+    "type": "panel_ess",
+    "building": "본관",
+    "location": "전기실",
+    "parent_eqp_no": "EQP_TR_LV_2"
+  },
+  {
+    "eqp_no": "EQP_LOAD_ESS_2",
+    "eqp_name": "ESS PCS #2",
+    "type": "load_ess",
+    "building": "별관",
+    "location": "ESS실",
+    "parent_eqp_no": "EQP_PANEL_ESS_2"
+  },
+  {
+    "eqp_no": "EQP_INCOMING_3",
+    "eqp_name": "인입선로 #3",
+    "type": "incoming_line",
+    "building": "본관",
+    "location": "수전설비실",
+    "parent_eqp_no": ""
+  },
+  {
+    "eqp_no": "EQP_GCB_3",
+    "eqp_name": "초고압 GCB #3",
+    "type": "gcb_ehv",
+    "building": "본관",
+    "location": "수전설비실",
+    "parent_eqp_no": "EQP_INCOMING_3"
+  },
+  {
+    "eqp_no": "EQP_TR_EHV_3",
+    "eqp_name": "초고압 변압기 BTR #3",
+    "type": "tr_ehv",
+    "building": "본관",
+    "location": "수변전실",
+    "parent_eqp_no": "EQP_GCB_3"
+  },
+  {
+    "eqp_no": "EQP_VCB_MAIN_3",
+    "eqp_name": "메인 VCB #3",
+    "type": "vcb_main",
+    "building": "본관",
+    "location": "수변전실",
+    "parent_eqp_no": "EQP_TR_EHV_3"
+  },
+  {
+    "eqp_no": "EQP_VCB_FEED_A3",
+    "eqp_name": "배전 VCB A계통 #3",
+    "type": "vcb_feeder",
+    "building": "본관",
+    "location": "분전반실 A",
+    "parent_eqp_no": "EQP_VCB_MAIN_3"
+  },
+  {
+    "eqp_no": "EQP_VCB_FEED_B3",
+    "eqp_name": "배전 VCB B계통 #3",
+    "type": "vcb_feeder",
+    "building": "본관",
+    "location": "분전반실 B",
+    "parent_eqp_no": "EQP_VCB_MAIN_3"
+  },
+  {
+    "eqp_no": "EQP_PANEL_MCCA_3",
+    "eqp_name": "MCC Panel A3",
+    "type": "panel_mcc",
+    "building": "본관",
+    "location": "분전반실 A",
+    "parent_eqp_no": "EQP_VCB_FEED_A3"
+  },
+  {
+    "eqp_no": "EQP_PANEL_MCCB_3",
+    "eqp_name": "MCC Panel B3",
+    "type": "panel_mcc",
+    "building": "본관",
+    "location": "분전반실 B",
+    "parent_eqp_no": "EQP_VCB_FEED_B3"
+  },
+  {
+    "eqp_no": "EQP_LOAD_PUMP_5",
+    "eqp_name": "생산용 펌프 #5",
+    "type": "load_pump",
+    "building": "공장동3",
+    "location": "1F 생산라인",
+    "parent_eqp_no": "EQP_PANEL_MCCA_3"
+  },
+  {
+    "eqp_no": "EQP_LOAD_PUMP_6",
+    "eqp_name": "생산용 펌프 #6",
+    "type": "load_pump",
+    "building": "공장동3",
+    "location": "1F 생산라인",
+    "parent_eqp_no": "EQP_PANEL_MCCA_3"
+  },
+  {
+    "eqp_no": "EQP_LOAD_FAN_5",
+    "eqp_name": "배기팬 #5",
+    "type": "load_fan",
+    "building": "공장동3",
+    "location": "2F 설비층",
+    "parent_eqp_no": "EQP_PANEL_MCCB_3"
+  },
+  {
+    "eqp_no": "EQP_LOAD_FAN_6",
+    "eqp_name": "배기팬 #6",
+    "type": "load_fan",
+    "building": "공장동3",
+    "location": "2F 설비층",
+    "parent_eqp_no": "EQP_PANEL_MCCB_3"
+  },
+  {
+    "eqp_no": "EQP_TR_LV_3",
+    "eqp_name": "저압 변압기 TR-LV #3",
+    "type": "tr_lv",
+    "building": "본관",
+    "location": "전기실",
+    "parent_eqp_no": "EQP_VCB_MAIN_3"
+  },
+  {
+    "eqp_no": "EQP_PANEL_ESS_3",
+    "eqp_name": "ESS Panel #3",
+    "type": "panel_ess",
+    "building": "본관",
+    "location": "전기실",
+    "parent_eqp_no": "EQP_TR_LV_3"
+  },
+  {
+    "eqp_no": "EQP_LOAD_ESS_3",
+    "eqp_name": "ESS PCS #3",
+    "type": "load_ess",
+    "building": "별관",
+    "location": "ESS실",
+    "parent_eqp_no": "EQP_PANEL_ESS_3"
+  },
+  {
+    "eqp_no": "EQP_INCOMING_4",
+    "eqp_name": "인입선로 #4",
+    "type": "incoming_line",
+    "building": "본관",
+    "location": "수전설비실",
+    "parent_eqp_no": ""
+  },
+  {
+    "eqp_no": "EQP_GCB_4",
+    "eqp_name": "초고압 GCB #4",
+    "type": "gcb_ehv",
+    "building": "본관",
+    "location": "수전설비실",
+    "parent_eqp_no": "EQP_INCOMING_4"
+  },
+  {
+    "eqp_no": "EQP_TR_EHV_4",
+    "eqp_name": "초고압 변압기 BTR #4",
+    "type": "tr_ehv",
+    "building": "본관",
+    "location": "수변전실",
+    "parent_eqp_no": "EQP_GCB_4"
+  },
+  {
+    "eqp_no": "EQP_VCB_MAIN_4",
+    "eqp_name": "메인 VCB #4",
+    "type": "vcb_main",
+    "building": "본관",
+    "location": "수변전실",
+    "parent_eqp_no": "EQP_TR_EHV_4"
+  },
+  {
+    "eqp_no": "EQP_VCB_FEED_A4",
+    "eqp_name": "배전 VCB A계통 #4",
+    "type": "vcb_feeder",
+    "building": "본관",
+    "location": "분전반실 A",
+    "parent_eqp_no": "EQP_VCB_MAIN_4"
+  },
+  {
+    "eqp_no": "EQP_VCB_FEED_B4",
+    "eqp_name": "배전 VCB B계통 #4",
+    "type": "vcb_feeder",
+    "building": "본관",
+    "location": "분전반실 B",
+    "parent_eqp_no": "EQP_VCB_MAIN_4"
+  },
+  {
+    "eqp_no": "EQP_PANEL_MCCA_4",
+    "eqp_name": "MCC Panel A4",
+    "type": "panel_mcc",
+    "building": "본관",
+    "location": "분전반실 A",
+    "parent_eqp_no": "EQP_VCB_FEED_A4"
+  },
+  {
+    "eqp_no": "EQP_PANEL_MCCB_4",
+    "eqp_name": "MCC Panel B4",
+    "type": "panel_mcc",
+    "building": "본관",
+    "location": "분전반실 B",
+    "parent_eqp_no": "EQP_VCB_FEED_B4"
+  },
+  {
+    "eqp_no": "EQP_LOAD_PUMP_7",
+    "eqp_name": "생산용 펌프 #7",
+    "type": "load_pump",
+    "building": "공장동4",
+    "location": "1F 생산라인",
+    "parent_eqp_no": "EQP_PANEL_MCCA_4"
+  },
+  {
+    "eqp_no": "EQP_LOAD_PUMP_8",
+    "eqp_name": "생산용 펌프 #8",
+    "type": "load_pump",
+    "building": "공장동4",
+    "location": "1F 생산라인",
+    "parent_eqp_no": "EQP_PANEL_MCCA_4"
+  },
+  {
+    "eqp_no": "EQP_LOAD_FAN_7",
+    "eqp_name": "배기팬 #7",
+    "type": "load_fan",
+    "building": "공장동4",
+    "location": "2F 설비층",
+    "parent_eqp_no": "EQP_PANEL_MCCB_4"
+  },
+  {
+    "eqp_no": "EQP_LOAD_FAN_8",
+    "eqp_name": "배기팬 #8",
+    "type": "load_fan",
+    "building": "공장동4",
+    "location": "2F 설비층",
+    "parent_eqp_no": "EQP_PANEL_MCCB_4"
+  },
+  {
+    "eqp_no": "EQP_TR_LV_4",
+    "eqp_name": "저압 변압기 TR-LV #4",
+    "type": "tr_lv",
+    "building": "본관",
+    "location": "전기실",
+    "parent_eqp_no": "EQP_VCB_MAIN_4"
+  },
+  {
+    "eqp_no": "EQP_PANEL_ESS_4",
+    "eqp_name": "ESS Panel #4",
+    "type": "panel_ess",
+    "building": "본관",
+    "location": "전기실",
+    "parent_eqp_no": "EQP_TR_LV_4"
+  },
+  {
+    "eqp_no": "EQP_LOAD_ESS_4",
+    "eqp_name": "ESS PCS #4",
+    "type": "load_ess",
+    "building": "별관",
+    "location": "ESS실",
+    "parent_eqp_no": "EQP_PANEL_ESS_4"
+  }
+]

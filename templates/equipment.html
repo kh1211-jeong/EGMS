@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block head_extras %}
+<style>
+  .eqp-intro {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  .eqp-intro b {
+    color: #e5e7eb;
+  }
+
+  .eqp-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.5);
+    background: rgba(15, 23, 42, 0.9);
+    color: #e5e7eb;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s, transform 0.08s;
+  }
+
+  .btn:hover {
+    background: rgba(30, 64, 175, 0.9);
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.65);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #2563eb, #38bdf8);
+    border-color: rgba(59, 130, 246, 0.9);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+  }
+
+  .eqp-shell {
+    border-radius: 24px;
+    border: 1px solid rgba(55, 65, 81, 0.9);
+    padding: 20px 22px 16px;
+    background: radial-gradient(circle at top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 1));
+  }
+
+  .eqp-table-outer {
+    margin-top: 8px;
+    border-radius: 18px;
+    border: 1px solid rgba(55, 65, 81, 0.9);
+    overflow: hidden;
+    background: rgba(15, 23, 42, 0.98);
+  }
+
+  /* 🔹 여기서 고정 높이 + 내부 스크롤 */
+  .eqp-table-wrapper {
+    max-height: 430px;
+    overflow-y: auto;
+    padding-right: 6px; /* 스크롤바 여백 */
+  }
+
+  .eqp-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .eqp-table thead {
+    background: rgba(15, 23, 42, 0.98);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  .eqp-table th,
+  .eqp-table td {
+    border-bottom: 1px solid rgba(30, 41, 59, 0.9);
+    padding: 9px 12px;
+    font-size: 12px;
+    text-align: left;
+    color: #e5e7eb;
+  }
+
+  .eqp-table th {
+    font-weight: 600;
+    color: #93c5fd;
+    white-space: nowrap;
+  }
+
+  .eqp-table tbody tr:hover {
+    background: radial-gradient(circle at left, rgba(37, 99, 235, 0.18), transparent 70%);
+  }
+
+  .eqp-cell-input {
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid rgba(55, 65, 81, 0.9);
+    background: rgba(15, 23, 42, 0.9);
+    padding: 5px 8px;
+    font-size: 12px;
+    color: #e5e7eb;
+    outline: none;
+  }
+
+  .eqp-cell-input:focus {
+    border-color: rgba(129, 140, 248, 0.9);
+    box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.7);
+  }
+
+  .eqp-footnote {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-soft);
+    text-align: left;
+  }
+
+  .eqp-status {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #a5b4fc;
+    text-align: right;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="content-inner">
+    <p class="eqp-intro">
+      각 설비를 <b>EQP_NO / 이름 / 타입 / 건물 / 위치 / 상위 설비</b> 기준으로 엑셀처럼 관리하고,<br />
+      이후 이 정보를 바탕으로 <b>연결 정보(Topology)</b>를 자동 구성할 예정입니다.
+    </p>
+
+    <div class="eqp-shell">
+      <div class="eqp-toolbar">
+        <button class="btn" type="button" id="btn-eqp-import">
+          엑셀 가져오기
+        </button>
+        <button class="btn" type="button" id="btn-eqp-export">
+          엑셀 내보내기
+        </button>
+        <button class="btn btn-primary" type="button" id="btn-eqp-save">
+          변경 내용 저장
+        </button>
+      </div>
+
+      <div class="eqp-table-outer">
+        <div class="eqp-table-wrapper">
+          <table class="eqp-table">
+            <thead>
+              <tr>
+                <th style="width: 150px;">EQP_NO</th>
+                <th style="width: 230px;">EQP_NAME</th>
+                <th style="width: 140px;">TYPE</th>
+                <th style="width: 120px;">건물</th>
+                <th>위치</th>
+                <th style="width: 170px;">상위 EQP_NO</th>
+              </tr>
+            </thead>
+            <tbody id="eqp-tbody">
+              <!-- JS에서 렌더링 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="eqp-status" id="eqp-status">
+        설비 정보를 불러오는 중입니다...
+      </div>
+
+      <p class="eqp-footnote">
+        ※ 지금은 파일럿 단계라 서버 메모리 & JSON 파일 기준으로만 반영됩니다. (정식 DB 연동은 이후 단계에서 진행)
+      </p>
+    </div>
+
+    <!-- 엑셀 Import용 숨겨진 input -->
+    <input type="file" id="eqp-file-input" accept=".csv" style="display:none" />
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let eqpItems = [];
+
+  function renderEqpTable() {
+    const tbody = document.getElementById("eqp-tbody");
+    tbody.innerHTML = "";
+
+    eqpItems.forEach((item, idx) => {
+      const tr = document.createElement("tr");
+
+      function makeCell(key, readOnly = false) {
+        const td = document.createElement("td");
+        const input = document.createElement("input");
+        input.className = "eqp-cell-input";
+        input.value = item[key] ?? "";
+        input.readOnly = readOnly;
+        input.dataset.index = idx;
+        input.dataset.field = key;
+        input.addEventListener("change", (e) => {
+          const i = Number(e.target.dataset.index);
+          const f = e.target.dataset.field;
+          eqpItems[i][f] = e.target.value;
+        });
+        td.appendChild(input);
+        return td;
+      }
+
+      tr.appendChild(makeCell("eqp_no", false));        // 필요하면 true로 EQP_NO 잠글 수 있음
+      tr.appendChild(makeCell("eqp_name", false));
+      tr.appendChild(makeCell("type", false));
+      tr.appendChild(makeCell("building", false));
+      tr.appendChild(makeCell("location", false));
+      tr.appendChild(makeCell("parent_eqp_no", false));
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function loadEquipments() {
+    const statusEl = document.getElementById("eqp-status");
+    statusEl.textContent = "설비 정보를 불러오는 중입니다...";
+
+    try {
+      const res = await fetch("/api/equipments");
+      if (!res.ok) {
+        statusEl.textContent = "설비 정보를 가져오지 못했습니다.";
+        return;
+      }
+      const data = await res.json();
+      eqpItems = data.items || [];
+      renderEqpTable();
+      statusEl.textContent = `총 ${eqpItems.length}개 설비를 불러왔습니다.`;
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "설비 정보를 가져오는 중 오류가 발생했습니다.";
+    }
+  }
+
+  async function saveEquipments() {
+    const statusEl = document.getElementById("eqp-status");
+    statusEl.textContent = "변경 내용을 저장 중입니다...";
+
+    try {
+      const res = await fetch("/api/equipments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: eqpItems }),
+      });
+      if (!res.ok) {
+        statusEl.textContent = "저장에 실패했습니다.";
+        return;
+      }
+      const data = await res.json();
+      statusEl.textContent = `저장 완료 · ${data.count ?? eqpItems.length}개 설비 반영`;
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "저장 중 오류가 발생했습니다.";
+    }
+  }
+
+  function exportEquipments() {
+    // 단순히 링크 이동으로 CSV 다운로드
+    window.location.href = "/api/equipments/export";
+  }
+
+  function openImportDialog() {
+    const input = document.getElementById("eqp-file-input");
+    input.value = "";
+    input.click();
+  }
+
+  async function handleImportChange(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const statusEl = document.getElementById("eqp-status");
+    statusEl.textContent = "엑셀 파일을 업로드 중입니다...";
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/equipments/import", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        statusEl.textContent = "엑셀 데이터를 가져오는 데 실패했습니다.";
+        return;
+      }
+
+      const data = await res.json();
+      statusEl.textContent = `엑셀 반영 완료 · ${data.count ?? 0}개 설비 반영`;
+      await loadEquipments();   // 새 데이터 다시 로드
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "엑셀 업로드 중 오류가 발생했습니다.";
+    }
+  }
+
+  document.getElementById("btn-eqp-save").addEventListener("click", saveEquipments);
+  document.getElementById("btn-eqp-export").addEventListener("click", exportEquipments);
+  document.getElementById("btn-eqp-import").addEventListener("click", openImportDialog);
+  document.getElementById("eqp-file-input").addEventListener("change", handleImportChange);
+
+  // 페이지 진입 시 자동 로드
+  loadEquipments();
+</script>
+{% endblock %}
