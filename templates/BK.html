@@ -54,36 +54,6 @@
     opacity: 0.9;
   }
 
-  /* 최근 검색 */
-  .topology-recent {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 4px;
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-  .topology-recent-label {
-    opacity: 0.8;
-    margin-right: 4px;
-  }
-  .topology-recent-chip {
-    border-radius: 999px;
-    border: 1px solid rgba(55, 65, 81, 0.9);
-    padding: 3px 8px;
-    background: rgba(15, 23, 42, 0.9);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .topology-recent-chip-key {
-    opacity: 0.7;
-  }
-  .topology-recent-chip-query {
-    color: #e5e7eb;
-  }
-
   /* 트리 뷰포트: 내용은 드래그로 이동, 스크롤바는 숨김 */
   .topology-graph-shell {
     border-radius: 18px;
@@ -91,7 +61,7 @@
     background: radial-gradient(circle at top, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 1));
     height: 320px;
     padding: 18px 24px;
-    overflow: hidden;
+    overflow: hidden;          /* 스크롤바 숨김 */
     position: relative;
     cursor: default;
   }
@@ -149,8 +119,8 @@
     font-size: 11px;
     color: var(--text-muted);
     line-height: 1.7;
-    max-height: 220px;
-    overflow: auto;
+    max-height: 220px;     /* 전하께서 원하시는 높이. 필요하면 숫자만 조정하시면 됨 */
+    overflow: auto;        /* 여기엔 스크롤바 표시 */
     border-radius: 12px;
     border: 1px solid rgba(55, 65, 81, 0.9);
     padding: 8px 10px;
@@ -199,15 +169,12 @@
         id="topology-search-input"
         class="topology-search-input"
         type="text"
-        placeholder="설비 번호 또는 이름을 입력하십시오. (*, ? 와일드카드 지원)"
+        placeholder="설비 번호 또는 이름을 입력하십시오."
       />
       <button id="topology-search-button" class="topology-search-button">
         검색
       </button>
     </div>
-
-    <!-- 최근 검색 -->
-    <div id="topology-recent" class="topology-recent"></div>
 
     <div class="topology-graph-shell" id="topology-shell">
       <div id="topology-graph" class="topology-graph">
@@ -236,7 +203,6 @@
     const searchKeyEl   = document.getElementById("topology-search-key");
     const searchInputEl = document.getElementById("topology-search-input");
     const searchBtnEl   = document.getElementById("topology-search-button");
-    const recentEl      = document.getElementById("topology-recent");
 
     statusEl.textContent = "검색할 설비를 선택하거나 이름을 입력하십시오.";
 
@@ -253,9 +219,6 @@
     let isPanning = false;
     let startX = 0;
     let startY = 0;
-
-    // 최근 검색 리스트 (메모리 캐시)
-    let recentSearches = [];
 
     function applyPan() {
       if (rootGroup) {
@@ -300,103 +263,6 @@
 
     attachPanHandlers();
 
-    // 최근 검색: localStorage load/save
-    function loadRecentSearches() {
-      try {
-        const raw = localStorage.getItem("egms_topology_recent");
-        if (!raw) return [];
-        const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed)) return [];
-        return parsed;
-      } catch {
-        return [];
-      }
-    }
-
-    function saveRecentSearches(list) {
-      try {
-        localStorage.setItem("egms_topology_recent", JSON.stringify(list));
-      } catch (e) {
-        console.warn("Failed to save recent searches", e);
-      }
-    }
-
-    function addRecentSearch(key, query) {
-      const trimmed = (query || "").trim();
-      if (!trimmed) return;
-      const id = key + "::" + trimmed.toLowerCase();
-
-      // 중복 제거 후 맨 앞에 추가
-      const filtered = recentSearches.filter(
-        (item) => (item.key + "::" + item.query.toLowerCase()) !== id
-      );
-      filtered.unshift({ key, query: trimmed });
-
-      // 최대 10개 유지
-      recentSearches = filtered.slice(0, 10);
-      saveRecentSearches(recentSearches);
-      renderRecentSearches();
-    }
-
-    function renderRecentSearches() {
-      if (!recentEl) return;
-      if (!recentSearches.length) {
-        recentEl.innerHTML = "";
-        return;
-      }
-
-      let html = '<span class="topology-recent-label">최근 검색:</span>';
-      recentSearches.forEach((item, idx) => {
-        const keyLabel = item.key === "id" ? "EQP_NO" : "EQP_NAME";
-        html += `
-          <button 
-            class="topology-recent-chip" 
-            type="button"
-            data-index="${idx}"
-          >
-            <span class="topology-recent-chip-key">${keyLabel}</span>
-            <span class="topology-recent-chip-query">${item.query}</span>
-          </button>
-        `;
-      });
-
-      recentEl.innerHTML = html;
-
-      // 클릭 이벤트 바인딩
-      recentEl.querySelectorAll(".topology-recent-chip").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const idx = parseInt(btn.getAttribute("data-index") || "0", 10);
-          const item = recentSearches[idx];
-          if (!item) return;
-          searchKeyEl.value = item.key;
-          searchInputEl.value = item.query;
-          handleSearch(); // 재검색
-        });
-      });
-    }
-
-    // 와일드카드 매처 (*, ? 지원)
-    function buildMatcher(raw) {
-      const q = (raw || "").trim().toLowerCase();
-      if (!q) {
-        return () => false;
-      }
-      const hasWildcard = /[*?]/.test(q);
-      if (!hasWildcard) {
-        // 기본: 부분 문자열 포함
-        return function (text) {
-          return (text || "").toLowerCase().includes(q);
-        };
-      }
-      // *, ? 를 정규식으로 변환
-      let esc = q.replace(/[.+^${}()|[\]\\]/g, "\\$&");
-      esc = esc.replace(/\*/g, ".*").replace(/\?/g, ".");
-      const re = new RegExp("^" + esc + "$");
-      return function (text) {
-        return re.test((text || "").toLowerCase());
-      };
-    }
-
     try {
       const res = await fetch("/api/topology");
       if (!res.ok) {
@@ -430,10 +296,6 @@
       svgEl.innerHTML = "";
       listEl.innerHTML = "";
       statusEl.textContent = "검색할 설비를 선택하거나 이름을 입력하십시오.";
-
-      // 최근 검색 로드
-      recentSearches = loadRecentSearches();
-      renderRecentSearches();
     } catch (err) {
       console.error(err);
       statusEl.textContent = "토폴로지 정보를 불러오는 중 오류가 발생했습니다.";
@@ -448,10 +310,8 @@
       panY = 0;
     }
 
-    // 여러 타겟에 대한 경로 하이라이트
-    function highlightPaths(targetIds, nodePositionsPixel, focusId) {
+    function highlightPath(targetId, nodePositionsPixel) {
       if (!rootGroup) return;
-      if (!Array.isArray(targetIds) || !targetIds.length) return;
 
       // 기존 하이라이트 제거
       rootGroup
@@ -461,40 +321,35 @@
         .querySelectorAll(".topology-edge--highlight")
         .forEach(el => el.classList.remove("topology-edge--highlight"));
 
-      const allPathSet = new Set();
-
-      targetIds.forEach((targetId) => {
-        const path = [];
-        let cur = targetId;
-        const visited = new Set();
-        while (cur && !visited.has(cur)) {
-          visited.add(cur);
-          path.push(cur);
-          cur = parentMap[cur];
-        }
-        path.reverse();
-        path.forEach((id) => allPathSet.add(id));
-
-        // 간선 하이라이트
-        for (let i = 0; i < path.length - 1; i++) {
-          const src = path[i];
-          const dst = path[i + 1];
-          const line = rootGroup.querySelector(
-            `.topology-edge[data-edge-source="${src}"][data-edge-target="${dst}"]`
-          );
-          if (line) line.classList.add("topology-edge--highlight");
-        }
-      });
+      // 루트까지 경로 계산
+      const path = [];
+      let cur = targetId;
+      const visited = new Set();
+      while (cur && !visited.has(cur)) {
+        visited.add(cur);
+        path.push(cur);
+        cur = parentMap[cur];
+      }
+      path.reverse();
 
       // 노드 하이라이트
-      allPathSet.forEach((id) => {
+      path.forEach(id => {
         const g = rootGroup.querySelector(`.topology-node[data-node-id="${id}"]`);
         if (g) g.classList.add("topology-node--highlight");
       });
 
-      // 포커스 노드 기준 중앙 정렬
-      const focus = focusId || targetIds[0];
-      const pos = nodePositionsPixel[focus];
+      // 간선 하이라이트
+      for (let i = 0; i < path.length - 1; i++) {
+        const src = path[i];
+        const dst = path[i + 1];
+        const line = rootGroup.querySelector(
+          `.topology-edge[data-edge-source="${src}"][data-edge-target="${dst}"]`
+        );
+        if (line) line.classList.add("topology-edge--highlight");
+      }
+
+      // 선택 노드를 뷰포트 중앙으로 이동 (팬 좌표 조정)
+      const pos = nodePositionsPixel[targetId];
       if (pos) {
         panX = graphShell.clientWidth / 2 - pos.x;
         panY = graphShell.clientHeight / 2 - pos.y;
@@ -502,41 +357,21 @@
       }
     }
 
-    // 여러 타겟 노드를 받아 "해당 계통들만" 그리기
-    function renderTreeForTargets(targetNodes) {
-      if (!targetNodes || !targetNodes.length) return;
+    function renderTreeForTarget(targetNode) {
       clearGraphAndList();
 
-      // 1) 매칭된 노드들이 속한 루트(인입선)만 찾기
-      const rootIdSet = new Set();
-
-      targetNodes.forEach((n) => {
-        let cur = n.id;
-        const visited = new Set();
-        while (cur && !visited.has(cur)) {
-          visited.add(cur);
-          const parent = parentMap[cur];
-          if (!parent) { // 부모 없으면 루트
-            rootIdSet.add(cur);
-            break;
-          }
-          cur = parent;
-        }
-      });
-
-      // 혹시라도 rootIdSet이 비면, fallback으로 전체 루트 사용
-      if (!rootIdSet.size) {
-        allNodes
-          .filter(nd => !parentMap[nd.id])
-          .forEach(nd => rootIdSet.add(nd.id));
+      // 타깃이 속한 그룹의 루트
+      let rootId = targetNode.id;
+      const visited = new Set();
+      while (parentMap[rootId] && !visited.has(rootId)) {
+        visited.add(rootId);
+        rootId = parentMap[rootId];
       }
 
-      const rootIds = Array.from(rootIdSet);
-
-      // 2) 이 루트들 기준으로만 BFS → 관련된 계통만 groupSet에 포함
+      // 루트 기준 연결 컴포넌트
       const groupSet = new Set();
       const groupNodes = [];
-      const queue = [...rootIds];
+      const queue = [rootId];
 
       while (queue.length) {
         const id = queue.shift();
@@ -552,7 +387,7 @@
         e => groupSet.has(e.source) && groupSet.has(e.target)
       );
 
-      // 3) 좌표 계산 (여러 루트 계통을 가로로 나란히)
+      // 좌표 계산
       const xGap = 80;
       const yGap = 70;
       const positions = {};
@@ -578,7 +413,7 @@
         positions[id] = { x, y: depth * yGap };
       }
 
-      rootIds.forEach(rootId => assignPos(rootId, 0));
+      assignPos(rootId, 0);
 
       const posList = Object.values(positions);
       const xs = posList.map(p => p.x);
@@ -664,7 +499,7 @@
       panY = 0;
       applyPan();
 
-      // 표(해당 계통들만)
+      // 표(해당 그룹만)
       const sortedGroupNodes = [...groupNodes].sort((a, b) =>
         (a.id || "").localeCompare(b.id || "")
       );
@@ -699,15 +534,14 @@
       html += "</tbody></table>";
       listEl.innerHTML = html;
 
-      // 타겟 노드들 경로 하이라이트 + 중앙 정렬
-      const targetIds = targetNodes.map((n) => n.id);
-      highlightPaths(targetIds, nodePositionsPixel, targetNodes[0].id);
+      // 선택 노드 경로 하이라이트 + 중앙 정렬
+      highlightPath(targetNode.id, nodePositionsPixel);
     }
 
     function handleSearch() {
-      const key  = searchKeyEl.value;      // "id" | "label"
-      const raw  = searchInputEl.value || "";
-      const q    = raw.trim();
+      const key = searchKeyEl.value;
+      const qRaw = searchInputEl.value || "";
+      const q    = qRaw.trim();
 
       if (!q) {
         clearGraphAndList();
@@ -715,28 +549,24 @@
         return;
       }
 
-      const matcher = buildMatcher(q);
+      const lowerQ = q.toLowerCase();
+      let target = null;
 
-      // 여러 대상 검색
-      const matches = allNodes.filter((n) => {
-        const targetText = key === "id" ? n.id : n.label;
-        return matcher(targetText || "");
-      });
+      if (key === "id") {
+        target = allNodes.find(n => (n.id || "").toLowerCase().includes(lowerQ));
+      } else {
+        target = allNodes.find(n => (n.label || "").toLowerCase().includes(lowerQ));
+      }
 
-      if (!matches.length) {
+      if (!target) {
         clearGraphAndList();
         statusEl.textContent = `검색 결과가 없습니다: "${q}"`;
         return;
       }
 
-      // 그래프 렌더링 (매칭된 설비가 포함된 계통만)
-      renderTreeForTargets(matches);
-
-      // 최근 검색 저장
-      addRecentSearch(key, q);
-
+      renderTreeForTarget(target);
       statusEl.textContent =
-        `노드 ${allNodes.length}개 · 엣지 ${allEdges.length}개 중 "${q}"에 해당하는 설비 ${matches.length}개가 포함된 계통만 시각화했습니다.`;
+        `노드 ${allNodes.length}개 · 엣지 ${allEdges.length}개 중 "${q}"에 해당하는 설비가 포함된 계통만 시각화했습니다.`;
     }
 
     searchBtnEl.addEventListener("click", handleSearch);
