@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ app_title }}</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #0f172a 0, #020617 45%, #000000 100%);
+      color: #e5e7eb;
+    }
+    .card {
+      padding: 32px 40px;
+      border-radius: 24px;
+      backdrop-filter: blur(18px);
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      box-shadow: 0 30px 90px rgba(15, 23, 42, 0.95);
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid rgba(96, 165, 250, 0.7);
+      background: linear-gradient(90deg, rgba(37, 99, 235, 0.12), rgba(56, 189, 248, 0.12));
+      color: #bfdbfe;
+      margin-bottom: 16px;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 20px;
+    }
+    .pill-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #a5b4fc;
+    }
+    .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(129, 140, 248, 0.5);
+      background: rgba(15, 23, 42, 0.7);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">
+      <span>●</span>
+      <span>EGMS Topology Prototype</span>
+    </div>
+    <div class="title">EGMS</div>
+    <div class="subtitle">
+      Energy Grid Monitoring System<br />
+      
+    </div>
+    <div class="pill-row">
+      <div class="pill">status: running</div>
+      <div class="pill">step 1 · UI shell</div>
+    </div>
+  </div>
+</body>
+</html>
