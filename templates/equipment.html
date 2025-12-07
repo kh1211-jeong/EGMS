@@ -14,11 +14,63 @@
     color: #e5e7eb;
   }
 
+  .eqp-shell {
+    border-radius: 24px;
+    border: 1px solid rgba(55, 65, 81, 0.9);
+    padding: 20px 22px 16px;
+    background: radial-gradient(circle at top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 1));
+  }
+
+  /* 상단 툴바: 왼쪽=검색, 오른쪽=버튼들 */
   .eqp-toolbar {
     display: flex;
-    justify-content: flex-end;
-    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
     margin-bottom: 10px;
+  }
+
+  .eqp-toolbar-left {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+  }
+
+  .eqp-toolbar-right {
+    display: flex;
+    gap: 8px;
+  }
+
+  .eqp-global-search {
+    flex: 1;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.6);
+    background: rgba(15, 23, 42, 0.9);
+    color: #e5e7eb;
+    font-size: 12px;
+    outline: none;
+  }
+
+  .eqp-global-search::placeholder {
+    color: rgba(148, 163, 184, 0.9);
+  }
+
+  .eqp-search-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(135deg, #2563eb, #38bdf8);
+    color: #e5e7eb;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, box-shadow 0.15s, transform 0.08s;
+  }
+
+  .eqp-search-btn:hover {
+    background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
   }
 
   .btn {
@@ -46,13 +98,6 @@
     background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
   }
 
-  .eqp-shell {
-    border-radius: 24px;
-    border: 1px solid rgba(55, 65, 81, 0.9);
-    padding: 20px 22px 16px;
-    background: radial-gradient(circle at top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 1));
-  }
-
   .eqp-table-outer {
     margin-top: 8px;
     border-radius: 18px;
@@ -61,11 +106,11 @@
     background: rgba(15, 23, 42, 0.98);
   }
 
-  /* 🔹 여기서 고정 높이 + 내부 스크롤 */
+  /* 표 영역: 고정 높이 + 내부 스크롤 */
   .eqp-table-wrapper {
     max-height: 430px;
     overflow-y: auto;
-    padding-right: 6px; /* 스크롤바 여백 */
+    padding-right: 6px;
   }
 
   .eqp-table {
@@ -116,6 +161,27 @@
     box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.7);
   }
 
+  /* 컬럼별 필터 인풋 */
+  .eqp-filter-input {
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid rgba(55, 65, 81, 0.9);
+    background: rgba(15, 23, 42, 0.9);
+    padding: 4px 6px;
+    font-size: 11px;
+    color: #e5e7eb;
+    outline: none;
+  }
+
+  .eqp-filter-input::placeholder {
+    color: rgba(148, 163, 184, 0.9);
+  }
+
+  .eqp-filter-input:focus {
+    border-color: rgba(129, 140, 248, 0.9);
+    box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.7);
+  }
+
   .eqp-footnote {
     margin-top: 8px;
     font-size: 11px;
@@ -141,15 +207,29 @@
 
     <div class="eqp-shell">
       <div class="eqp-toolbar">
-        <button class="btn" type="button" id="btn-eqp-import">
-          엑셀 가져오기
-        </button>
-        <button class="btn" type="button" id="btn-eqp-export">
-          엑셀 내보내기
-        </button>
-        <button class="btn btn-primary" type="button" id="btn-eqp-save">
-          변경 내용 저장
-        </button>
+        <div class="eqp-toolbar-left">
+          <input
+            id="eqp-global-search"
+            class="eqp-global-search"
+            type="text"
+            placeholder="전체 검색 (EQP_NO, EQP_NAME, TYPE, 건물, 위치, 상위 EQP_NO)"
+          />
+          <button id="eqp-global-search-btn" class="eqp-search-btn" type="button">
+            검색
+          </button>
+        </div>
+
+        <div class="eqp-toolbar-right">
+          <button class="btn" type="button" id="btn-eqp-import">
+            엑셀 가져오기
+          </button>
+          <button class="btn" type="button" id="btn-eqp-export">
+            엑셀 내보내기
+          </button>
+          <button class="btn btn-primary" type="button" id="btn-eqp-save">
+            변경 내용 저장
+          </button>
+        </div>
       </div>
 
       <div class="eqp-table-outer">
@@ -163,6 +243,15 @@
                 <th style="width: 120px;">건물</th>
                 <th>위치</th>
                 <th style="width: 170px;">상위 EQP_NO</th>
+              </tr>
+              <!-- 컬럼별 필터 행 -->
+              <tr>
+                <th><input class="eqp-filter-input" data-col="0" placeholder="EQP_NO 필터" /></th>
+                <th><input class="eqp-filter-input" data-col="1" placeholder="EQP_NAME 필터" /></th>
+                <th><input class="eqp-filter-input" data-col="2" placeholder="TYPE 필터" /></th>
+                <th><input class="eqp-filter-input" data-col="3" placeholder="건물 필터" /></th>
+                <th><input class="eqp-filter-input" data-col="4" placeholder="위치 필터" /></th>
+                <th><input class="eqp-filter-input" data-col="5" placeholder="상위 EQP_NO 필터" /></th>
               </tr>
             </thead>
             <tbody id="eqp-tbody">
@@ -190,8 +279,54 @@
 <script>
   let eqpItems = [];
 
+  const tbody            = document.getElementById("eqp-tbody");
+  const statusEl         = document.getElementById("eqp-status");
+  const globalSearchEl   = document.getElementById("eqp-global-search");
+  const globalSearchBtn  = document.getElementById("eqp-global-search-btn");
+  const filterInputsNode = document.querySelectorAll(".eqp-filter-input");
+
+  const filterInputs = Array.from(filterInputsNode);
+
+  // 대표 검색 + 컬럼별 필터 적용
+  function filterTable() {
+    const globalValue = (globalSearchEl.value || "").trim().toLowerCase();
+    const columnFilters = filterInputs.map(inp => (inp.value || "").trim().toLowerCase());
+
+    for (const row of tbody.rows) {
+      const cells = row.cells;
+      let show = true;
+
+      // 대표 검색: 한 행 전체 텍스트 기준
+      if (globalValue) {
+        let rowText = "";
+        for (let i = 0; i < cells.length; i++) {
+          const input = cells[i].querySelector("input");
+          const text  = input ? input.value : cells[i].innerText;
+          rowText += " " + (text || "");
+        }
+        rowText = rowText.toLowerCase();
+        if (!rowText.includes(globalValue)) {
+          show = false;
+        }
+      }
+
+      // 컬럼별 필터
+      columnFilters.forEach((val, colIdx) => {
+        if (!val) return;
+        const cell = cells[colIdx];
+        if (!cell) return;
+        const input = cell.querySelector("input");
+        const text  = (input ? input.value : cell.innerText || "").toLowerCase();
+        if (!text.includes(val)) {
+          show = false;
+        }
+      });
+
+      row.style.display = show ? "" : "none";
+    }
+  }
+
   function renderEqpTable() {
-    const tbody = document.getElementById("eqp-tbody");
     tbody.innerHTML = "";
 
     eqpItems.forEach((item, idx) => {
@@ -209,6 +344,8 @@
           const i = Number(e.target.dataset.index);
           const f = e.target.dataset.field;
           eqpItems[i][f] = e.target.value;
+          // 값이 바뀌면 현재 필터 조건 기준으로 다시 표시
+          filterTable();
         });
         td.appendChild(input);
         return td;
@@ -223,10 +360,12 @@
 
       tbody.appendChild(tr);
     });
+
+    // 테이블 새로 그린 뒤에도 필터 상태 유지
+    filterTable();
   }
 
   async function loadEquipments() {
-    const statusEl = document.getElementById("eqp-status");
     statusEl.textContent = "설비 정보를 불러오는 중입니다...";
 
     try {
@@ -246,7 +385,6 @@
   }
 
   async function saveEquipments() {
-    const statusEl = document.getElementById("eqp-status");
     statusEl.textContent = "변경 내용을 저장 중입니다...";
 
     try {
@@ -268,7 +406,6 @@
   }
 
   function exportEquipments() {
-    // 단순히 링크 이동으로 CSV 다운로드
     window.location.href = "/api/equipments/export";
   }
 
@@ -282,7 +419,6 @@
     const file = event.target.files[0];
     if (!file) return;
 
-    const statusEl = document.getElementById("eqp-status");
     statusEl.textContent = "엑셀 파일을 업로드 중입니다...";
 
     const formData = new FormData();
@@ -301,19 +437,33 @@
 
       const data = await res.json();
       statusEl.textContent = `엑셀 반영 완료 · ${data.count ?? 0}개 설비 반영`;
-      await loadEquipments();   // 새 데이터 다시 로드
+      await loadEquipments();
     } catch (err) {
       console.error(err);
       statusEl.textContent = "엑셀 업로드 중 오류가 발생했습니다.";
     }
   }
 
+  // 이벤트 바인딩
   document.getElementById("btn-eqp-save").addEventListener("click", saveEquipments);
   document.getElementById("btn-eqp-export").addEventListener("click", exportEquipments);
   document.getElementById("btn-eqp-import").addEventListener("click", openImportDialog);
   document.getElementById("eqp-file-input").addEventListener("change", handleImportChange);
 
-  // 페이지 진입 시 자동 로드
+  // 대표 검색: 버튼 / Enter
+  globalSearchBtn.addEventListener("click", filterTable);
+  globalSearchEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      filterTable();
+    }
+  });
+
+  // 컬럼별 필터: 입력 즉시 적용
+  filterInputs.forEach((inp) => {
+    inp.addEventListener("input", filterTable);
+  });
+
+  // 페이지 진입 시 전체 설비 로드 (초기에는 전체 행이 그대로 보임)
   loadEquipments();
 </script>
 {% endblock %}
