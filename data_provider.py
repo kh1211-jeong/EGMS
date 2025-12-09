@@ -4,7 +4,7 @@ from pathlib import Path
 import random
 from datetime import datetime
 
-from equipment_provider import list_equipments  # 기존 파일 수정 없음, 여기서만 가져옴
+from equipment_provider import list_equipments 
 
 DB_PATH = Path(__file__).with_name("equipments_data.json")
 
@@ -109,3 +109,30 @@ def bulk_update(items: dict):
     global _data
     _data = items
     _save_to_file()
+
+def random_update_all():
+    """
+    모든 설비의 계측값을 한 번씩 랜덤 갱신.
+    - 5초마다 호출되도록 main.py에서 백그라운드 루프에 연결할 예정
+    """
+    global _data
+    _ensure_initialized()
+    if not _data:
+        return
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    for eqp_no, v in _data.items():
+        # 없는 키는 새로 만들고, 있는 키는 덮어쓰기
+        v["status"] = random.choice(["NORMAL", "WARN", "FAIL"])
+        v["voltage"] = round(random.uniform(210, 245), 1)
+        v["current"] = round(random.uniform(10, 300), 1)
+        v["temperature"] = round(random.uniform(25, 95), 1)
+        v["load_percentage"] = random.randint(0, 100)
+        v["warning_level"] = random.choice(["NONE", "LOW", "MID", "HIGH"])
+        v["last_update"] = now_str
+
+    _save_to_file()
+
+    # 콘솔에서 변화 확인용 로그
+    print(f"[DATA-UPDATE] {len(_data)} rows updated at {now_str}")

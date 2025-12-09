@@ -321,5 +321,7 @@
   document.getElementById("data-file-input").onchange = handleImportChange;
 
   loadData();
+  setInterval(loadData, 5000);
+
 </script>
 {% endblock %}

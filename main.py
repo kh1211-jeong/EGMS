@@ -5,10 +5,11 @@ from fastapi.templating import Jinja2Templates
 
 from topology_provider import get_topology
 from equipment_provider import list_equipments, update_equipments
-from data_provider import list_data, bulk_update
+from data_provider import list_data, bulk_update, random_update_all
 
 import io
 import csv
+import asyncio
 
 app = FastAPI(title="EGMS")
 
@@ -309,3 +310,15 @@ async def api_equipment_data_import(file: UploadFile = File(...)):
 
     bulk_update(data_dict)
     return {"ok": True, "count": len(data_dict)}
+
+@app.on_event("startup")
+async def start_data_updater():
+    """
+    서버가 뜰 때 5초마다 계측값을 랜덤 갱신하는 백그라운드 태스크 시작
+    """
+    async def _worker():
+        while True:
+            random_update_all()   # 5초마다 한 번 호출
+            await asyncio.sleep(5)
+
+    asyncio.create_task(_worker())
