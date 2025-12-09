@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block head_extras %}
+<style>
+  /* ========== equipment.html의 스타일 그대로 유지 ========== */
+  .eqp-intro {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+  .eqp-intro b { color: #e5e7eb; }
+
+  .eqp-shell {
+    border-radius: 24px;
+    border: 1px solid rgba(55,65,81,0.9);
+    padding: 20px 22px 16px;
+    background: radial-gradient(circle at top, rgba(15,23,42,0.98), rgba(15,23,42,1));
+  }
+
+  .eqp-toolbar {
+    display: flex; justify-content: space-between;
+    align-items: center; gap: 12px; margin-bottom: 10px;
+  }
+  .eqp-toolbar-left { display: flex; flex: 1; gap: 8px; }
+  .eqp-toolbar-right { display: flex; gap: 8px; }
+
+  .eqp-global-search {
+    flex: 1; padding: 6px 12px; border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.6);
+    background: rgba(15,23,42,0.9);
+    color: #e5e7eb; font-size: 12px;
+  }
+  .eqp-global-search::placeholder { color: rgba(148,163,184,0.9); }
+
+  .eqp-search-btn, .btn {
+    padding: 6px 14px; font-size: 12px; border-radius: 999px;
+    cursor: pointer; transition: 0.15s;
+  }
+  .eqp-search-btn {
+    background: linear-gradient(135deg,#2563eb,#38bdf8);
+    border: none; color:#e5e7eb;
+  }
+  .btn {
+    border:1px solid rgba(148,163,184,0.5);
+    background: rgba(15,23,42,0.9); color:#e5e7eb;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg,#2563eb,#38bdf8);
+    border-color: rgba(59,130,246,0.9);
+  }
+
+  .eqp-table-outer {
+    margin-top:8px; border-radius:18px;
+    border:1px solid rgba(55,65,81,0.9);
+    overflow:hidden; background:rgba(15,23,42,0.98);
+  }
+  .eqp-table-wrapper { max-height:430px; overflow-y:auto; padding-right:6px; }
+
+  .eqp-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+  .eqp-table th {
+    background:rgba(15,23,42,0.98);
+    color:#93c5fd; font-size:12px; font-weight:600;
+    white-space:nowrap; padding:9px 12px;
+  }
+  .eqp-table td {
+    padding:9px 12px; font-size:12px;
+    border-bottom:1px solid rgba(30,41,59,0.9);
+  }
+  .eqp-table tbody tr:hover {
+    background:radial-gradient(circle at left, rgba(37,99,235,0.18), transparent 70%);
+  }
+
+  .eqp-cell-input {
+    width:100%; border-radius:6px; padding:5px 8px;
+    background:rgba(15,23,42,0.9); border:1px solid rgba(55,65,81,0.9);
+    color:#e5e7eb;
+  }
+  .eqp-filter-input {
+    width:100%; border-radius:6px; padding:4px 6px;
+    background:rgba(15,23,42,0.9); border:1px solid rgba(55,65,81,0.9);
+    font-size:11px; color:#e5e7eb;
+  }
+
+  .eqp-status { margin-top:6px; font-size:11px; color:#a5b4fc; text-align:right; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-inner">
+
+  <p class="eqp-intro">
+    설비의 <b>상태 정보(전압·전류·온도·알람·부하율)</b>를 엑셀처럼 관리하고,<br />
+    Topology 및 실시간 대시보드에 활용할 파일럿 데이터 소스로 사용합니다.
+  </p>
+
+  <div class="eqp-shell">
+
+    <!-- 툴바 -->
+    <div class="eqp-toolbar">
+      <div class="eqp-toolbar-left">
+        <input id="eqp-global-search" class="eqp-global-search"
+               placeholder="전체 검색 (EQP_NO, 이름, 상태, 전압, 전류 등)" />
+        <button id="eqp-global-search-btn" class="eqp-search-btn">검색</button>
+      </div>
+
+      <div class="eqp-toolbar-right">
+        <button class="btn" id="btn-data-import">엑셀 가져오기</button>
+        <button class="btn" id="btn-data-export">엑셀 내보내기</button>
+        <button class="btn btn-primary" id="btn-data-save">변경 내용 저장</button>
+      </div>
+    </div>
+
+    <!-- 테이블 -->
+    <div class="eqp-table-outer">
+      <div class="eqp-table-wrapper">
+        <table class="eqp-table">
+          <thead>
+            <tr>
+              <th style="width:140px;">EQP_NO</th>
+              <th style="width:200px;">EQP_NAME</th>
+              <th style="width:100px;">상태</th>
+              <th style="width:100px;">전압(V)</th>
+              <th style="width:100px;">전류(A)</th>
+              <th style="width:100px;">온도(°C)</th>
+              <th style="width:100px;">부하율(%)</th>
+              <th style="width:120px;">알람 등급</th>
+              <th style="width:160px;">업데이트 시각</th>
+            </tr>
+            <tr>
+              <th><input class="eqp-filter-input" data-col="0" placeholder="EQP_NO" /></th>
+              <th><input class="eqp-filter-input" data-col="1" placeholder="이름" /></th>
+              <th><input class="eqp-filter-input" data-col="2" placeholder="상태" /></th>
+              <th><input class="eqp-filter-input" data-col="3" placeholder="전압" /></th>
+              <th><input class="eqp-filter-input" data-col="4" placeholder="전류" /></th>
+              <th><input class="eqp-filter-input" data-col="5" placeholder="온도" /></th>
+              <th><input class="eqp-filter-input" data-col="6" placeholder="부하율" /></th>
+              <th><input class="eqp-filter-input" data-col="7" placeholder="알람 등급" /></th>
+              <th><input class="eqp-filter-input" data-col="8" placeholder="시각" /></th>
+            </tr>
+          </thead>
+
+          <tbody id="data-tbody">
+            <!-- JS 렌더링 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="eqp-status" id="data-status">데이터 불러오는 중…</div>
+    <p class="eqp-footnote">※ 파일럿 단계로 서버 메모리 JSON 기반으로만 반영합니다.</p>
+
+    <input type="file" id="data-file-input" accept=".csv" style="display:none" />
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let dataItems = [];
+
+  const tbody = document.getElementById("data-tbody");
+  const statusEl = document.getElementById("data-status");
+  const globalSearchEl = document.getElementById("eqp-global-search");
+  const globalSearchBtn = document.getElementById("eqp-global-search-btn");
+  const filterInputs = Array.from(document.querySelectorAll(".eqp-filter-input"));
+
+  /* ====== FILTERING ====== */
+  function filterTable() {
+    const global = (globalSearchEl.value || "").trim().toLowerCase();
+    const colFilters = filterInputs.map(i => (i.value || "").trim().toLowerCase());
+
+    for (const row of tbody.rows) {
+      const cells = row.cells;
+      let visible = true;
+
+      if (global) {
+        let rowText = "";
+        for (let c = 0; c < cells.length; c++) {
+          const input = cells[c].querySelector("input");
+          const text = input ? input.value : cells[c].innerText;
+          rowText += " " + (text || "");
+        }
+        if (!rowText.toLowerCase().includes(global)) visible = false;
+      }
+
+      colFilters.forEach((val, idx) => {
+        if (!val) return;
+        const cell = cells[idx];
+        const input = cell.querySelector("input");
+        const text = (input ? input.value : cell.innerText || "").toLowerCase();
+        if (!text.includes(val)) visible = false;
+      });
+
+      row.style.display = visible ? "" : "none";
+    }
+  }
+
+  /* ====== RENDER TABLE ====== */
+  function renderTable() {
+    tbody.innerHTML = "";
+
+    dataItems.forEach((item, idx) => {
+      const tr = document.createElement("tr");
+
+      function makeCell(key, readOnly=false) {
+        const td = document.createElement("td");
+        const input = document.createElement("input");
+        input.className = "eqp-cell-input";
+        input.value = item[key] ?? "";
+        input.readOnly = readOnly;
+        input.dataset.idx = idx;
+        input.dataset.field = key;
+        input.onchange = (e) => {
+          const i = Number(e.target.dataset.idx);
+          const f = e.target.dataset.field;
+          dataItems[i][f] = e.target.value;
+          filterTable();
+        };
+        td.appendChild(input);
+        return td;
+      }
+
+      tr.appendChild(makeCell("eqp_no", true));
+      tr.appendChild(makeCell("eqp_name", true));
+      tr.appendChild(makeCell("status"));
+      tr.appendChild(makeCell("voltage"));
+      tr.appendChild(makeCell("current"));
+      tr.appendChild(makeCell("temperature"));
+      tr.appendChild(makeCell("load_rate"));
+      tr.appendChild(makeCell("warning_level"));
+      tr.appendChild(makeCell("updated_at"));
+
+      tbody.appendChild(tr);
+    });
+
+    filterTable();
+  }
+
+  /* ====== LOAD ====== */
+  async function loadData() {
+    statusEl.textContent = "데이터 불러오는 중…";
+
+    const res = await fetch("/api/equipment-data");
+    if (!res.ok) {
+      statusEl.textContent = "데이터를 가져오지 못했습니다.";
+      return;
+    }
+
+    const data = await res.json();
+    dataItems = data.items || [];
+
+    renderTable();
+    statusEl.textContent = `총 ${dataItems.length}개 데이터 로드`;
+  }
+
+  /* ====== SAVE ====== */
+  async function saveData() {
+    statusEl.textContent = "저장 중…";
+
+    const res = await fetch("/api/equipment-data", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ items: dataItems })
+    });
+
+    if (!res.ok) {
+      statusEl.textContent = "저장 실패";
+      return;
+    }
+
+    const data = await res.json();
+    statusEl.textContent = `저장 완료 · ${data.count}개 반영`;
+  }
+
+  /* ====== IMPORT / EXPORT ====== */
+  function openImportDialog() {
+    const inp = document.getElementById("data-file-input");
+    inp.value = "";
+    inp.click();
+  }
+
+  async function handleImportChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    statusEl.textContent = "엑셀 가져오는 중…";
+
+    const form = new FormData();
+    form.append("file", file);
+
+    const res = await fetch("/api/equipment-data/import", {
+      method: "POST",
+      body: form,
+    });
+
+    if (!res.ok) {
+      statusEl.textContent = "가져오기 실패";
+      return;
+    }
+
+    const data = await res.json();
+    statusEl.textContent = `엑셀 반영 완료 · ${data.count}`;
+    loadData();
+  }
+
+  function exportData() {
+    window.location.href = "/api/equipment-data/export";
+  }
+
+  /* ====== EVENTS ====== */
+  globalSearchBtn.onclick = filterTable;
+  globalSearchEl.onkeydown = (e) => { if (e.key==="Enter") filterTable(); };
+  filterInputs.forEach(inp => inp.oninput = filterTable);
+
+  document.getElementById("btn-data-save").onclick = saveData;
+  document.getElementById("btn-data-export").onclick = exportData;
+  document.getElementById("btn-data-import").onclick = openImportDialog;
+  document.getElementById("data-file-input").onchange = handleImportChange;
+
+  loadData();
+</script>
+{% endblock %}

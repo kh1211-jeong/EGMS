@@ -1,0 +1,542 @@
+{
+  "EQP_INCOMING_1": {
+    "status": "WARN",
+    "voltage": 230.7,
+    "current": 258.3,
+    "warning_level": "NONE",
+    "temperature": 56.8,
+    "load_percentage": 8,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_GCB_1": {
+    "status": "FAIL",
+    "voltage": 221.5,
+    "current": 165.1,
+    "warning_level": "HIGH",
+    "temperature": 78.8,
+    "load_percentage": 81,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_TR_EHV_1": {
+    "status": "FAIL",
+    "voltage": 211.7,
+    "current": 155.6,
+    "warning_level": "MID",
+    "temperature": 80.7,
+    "load_percentage": 5,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_VCB_MAIN_1": {
+    "status": "FAIL",
+    "voltage": 225.8,
+    "current": 262.9,
+    "warning_level": "HIGH",
+    "temperature": 75.0,
+    "load_percentage": 66,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_VCB_FEED_A1": {
+    "status": "WARN",
+    "voltage": 244.5,
+    "current": 134.3,
+    "warning_level": "LOW",
+    "temperature": 79.5,
+    "load_percentage": 74,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_VCB_FEED_B1": {
+    "status": "FAIL",
+    "voltage": 236.0,
+    "current": 219.9,
+    "warning_level": "LOW",
+    "temperature": 91.9,
+    "load_percentage": 22,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_PANEL_MCCA_1": {
+    "status": "NORMAL",
+    "voltage": 212.3,
+    "current": 51.7,
+    "warning_level": "LOW",
+    "temperature": 94.0,
+    "load_percentage": 71,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_PANEL_MCCB_1": {
+    "status": "WARN",
+    "voltage": 236.0,
+    "current": 289.3,
+    "warning_level": "LOW",
+    "temperature": 80.7,
+    "load_percentage": 97,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_PUMP_1": {
+    "status": "NORMAL",
+    "voltage": 229.4,
+    "current": 245.2,
+    "warning_level": "MID",
+    "temperature": 27.0,
+    "load_percentage": 25,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_PUMP_2": {
+    "status": "NORMAL",
+    "voltage": 212.4,
+    "current": 167.2,
+    "warning_level": "LOW",
+    "temperature": 37.1,
+    "load_percentage": 90,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_FAN_1": {
+    "status": "FAIL",
+    "voltage": 243.2,
+    "current": 178.3,
+    "warning_level": "LOW",
+    "temperature": 29.8,
+    "load_percentage": 14,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_FAN_2": {
+    "status": "FAIL",
+    "voltage": 239.0,
+    "current": 132.3,
+    "warning_level": "HIGH",
+    "temperature": 66.6,
+    "load_percentage": 98,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_TR_LV_1": {
+    "status": "NORMAL",
+    "voltage": 223.1,
+    "current": 269.2,
+    "warning_level": "HIGH",
+    "temperature": 69.4,
+    "load_percentage": 46,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_PANEL_ESS_1": {
+    "status": "NORMAL",
+    "voltage": 240.4,
+    "current": 215.0,
+    "warning_level": "NONE",
+    "temperature": 82.5,
+    "load_percentage": 75,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_ESS_1": {
+    "status": "FAIL",
+    "voltage": 211.8,
+    "current": 20.8,
+    "warning_level": "MID",
+    "temperature": 32.7,
+    "load_percentage": 73,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_INCOMING_2": {
+    "status": "FAIL",
+    "voltage": 236.0,
+    "current": 99.6,
+    "warning_level": "HIGH",
+    "temperature": 42.4,
+    "load_percentage": 37,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_GCB_2": {
+    "status": "NORMAL",
+    "voltage": 236.2,
+    "current": 82.4,
+    "warning_level": "NONE",
+    "temperature": 39.8,
+    "load_percentage": 25,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_TR_EHV_2": {
+    "status": "FAIL",
+    "voltage": 243.6,
+    "current": 137.6,
+    "warning_level": "NONE",
+    "temperature": 38.0,
+    "load_percentage": 31,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_VCB_MAIN_2": {
+    "status": "FAIL",
+    "voltage": 218.2,
+    "current": 192.3,
+    "warning_level": "HIGH",
+    "temperature": 64.7,
+    "load_percentage": 62,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_VCB_FEED_A2": {
+    "status": "NORMAL",
+    "voltage": 227.8,
+    "current": 240.8,
+    "warning_level": "NONE",
+    "temperature": 38.8,
+    "load_percentage": 1,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_VCB_FEED_B2": {
+    "status": "FAIL",
+    "voltage": 212.6,
+    "current": 108.5,
+    "warning_level": "NONE",
+    "temperature": 88.0,
+    "load_percentage": 62,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_PANEL_MCCA_2": {
+    "status": "FAIL",
+    "voltage": 217.1,
+    "current": 105.7,
+    "warning_level": "HIGH",
+    "temperature": 67.3,
+    "load_percentage": 10,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_PANEL_MCCB_2": {
+    "status": "WARN",
+    "voltage": 241.9,
+    "current": 295.6,
+    "warning_level": "HIGH",
+    "temperature": 79.9,
+    "load_percentage": 61,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_PUMP_3": {
+    "status": "NORMAL",
+    "voltage": 216.5,
+    "current": 163.1,
+    "warning_level": "LOW",
+    "temperature": 28.4,
+    "load_percentage": 14,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_PUMP_4": {
+    "status": "WARN",
+    "voltage": 228.8,
+    "current": 277.2,
+    "warning_level": "LOW",
+    "temperature": 62.4,
+    "load_percentage": 34,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_FAN_3": {
+    "status": "NORMAL",
+    "voltage": 227.3,
+    "current": 120.8,
+    "warning_level": "NONE",
+    "temperature": 93.2,
+    "load_percentage": 36,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_FAN_4": {
+    "status": "FAIL",
+    "voltage": 219.6,
+    "current": 55.6,
+    "warning_level": "LOW",
+    "temperature": 88.1,
+    "load_percentage": 45,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_TR_LV_2": {
+    "status": "NORMAL",
+    "voltage": 231.4,
+    "current": 51.4,
+    "warning_level": "MID",
+    "temperature": 71.1,
+    "load_percentage": 75,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_PANEL_ESS_2": {
+    "status": "NORMAL",
+    "voltage": 238.9,
+    "current": 296.4,
+    "warning_level": "MID",
+    "temperature": 85.1,
+    "load_percentage": 51,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_ESS_2": {
+    "status": "FAIL",
+    "voltage": 231.5,
+    "current": 56.1,
+    "warning_level": "NONE",
+    "temperature": 43.2,
+    "load_percentage": 27,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_INCOMING_3": {
+    "status": "FAIL",
+    "voltage": 219.2,
+    "current": 11.3,
+    "warning_level": "LOW",
+    "temperature": 52.7,
+    "load_percentage": 90,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_GCB_3": {
+    "status": "NORMAL",
+    "voltage": 212.2,
+    "current": 181.4,
+    "warning_level": "NONE",
+    "temperature": 80.8,
+    "load_percentage": 43,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_TR_EHV_3": {
+    "status": "FAIL",
+    "voltage": 224.4,
+    "current": 29.8,
+    "warning_level": "NONE",
+    "temperature": 90.0,
+    "load_percentage": 80,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_VCB_MAIN_3": {
+    "status": "FAIL",
+    "voltage": 234.9,
+    "current": 222.9,
+    "warning_level": "HIGH",
+    "temperature": 48.1,
+    "load_percentage": 1,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_VCB_FEED_A3": {
+    "status": "WARN",
+    "voltage": 232.4,
+    "current": 93.7,
+    "warning_level": "NONE",
+    "temperature": 72.2,
+    "load_percentage": 5,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_VCB_FEED_B3": {
+    "status": "FAIL",
+    "voltage": 219.4,
+    "current": 217.3,
+    "warning_level": "LOW",
+    "temperature": 64.1,
+    "load_percentage": 3,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_PANEL_MCCA_3": {
+    "status": "NORMAL",
+    "voltage": 229.8,
+    "current": 63.3,
+    "warning_level": "MID",
+    "temperature": 51.8,
+    "load_percentage": 80,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_PANEL_MCCB_3": {
+    "status": "FAIL",
+    "voltage": 215.7,
+    "current": 228.4,
+    "warning_level": "LOW",
+    "temperature": 43.7,
+    "load_percentage": 68,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_PUMP_5": {
+    "status": "WARN",
+    "voltage": 231.2,
+    "current": 262.4,
+    "warning_level": "LOW",
+    "temperature": 93.1,
+    "load_percentage": 22,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_PUMP_6": {
+    "status": "FAIL",
+    "voltage": 213.0,
+    "current": 209.1,
+    "warning_level": "HIGH",
+    "temperature": 49.7,
+    "load_percentage": 24,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_FAN_5": {
+    "status": "NORMAL",
+    "voltage": 212.0,
+    "current": 210.4,
+    "warning_level": "MID",
+    "temperature": 35.7,
+    "load_percentage": 47,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_FAN_6": {
+    "status": "NORMAL",
+    "voltage": 214.3,
+    "current": 274.1,
+    "warning_level": "LOW",
+    "temperature": 53.0,
+    "load_percentage": 20,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_TR_LV_3": {
+    "status": "WARN",
+    "voltage": 211.5,
+    "current": 236.0,
+    "warning_level": "NONE",
+    "temperature": 73.1,
+    "load_percentage": 2,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_PANEL_ESS_3": {
+    "status": "FAIL",
+    "voltage": 219.6,
+    "current": 156.3,
+    "warning_level": "LOW",
+    "temperature": 80.6,
+    "load_percentage": 19,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_ESS_3": {
+    "status": "WARN",
+    "voltage": 228.0,
+    "current": 104.9,
+    "warning_level": "LOW",
+    "temperature": 64.1,
+    "load_percentage": 62,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_INCOMING_4": {
+    "status": "WARN",
+    "voltage": 243.2,
+    "current": 266.4,
+    "warning_level": "HIGH",
+    "temperature": 55.1,
+    "load_percentage": 39,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_GCB_4": {
+    "status": "NORMAL",
+    "voltage": 222.2,
+    "current": 16.7,
+    "warning_level": "HIGH",
+    "temperature": 36.1,
+    "load_percentage": 77,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_TR_EHV_4": {
+    "status": "WARN",
+    "voltage": 233.6,
+    "current": 184.4,
+    "warning_level": "HIGH",
+    "temperature": 75.4,
+    "load_percentage": 55,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_VCB_MAIN_4": {
+    "status": "FAIL",
+    "voltage": 229.2,
+    "current": 204.5,
+    "warning_level": "NONE",
+    "temperature": 38.2,
+    "load_percentage": 6,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_VCB_FEED_A4": {
+    "status": "FAIL",
+    "voltage": 239.8,
+    "current": 275.4,
+    "warning_level": "LOW",
+    "temperature": 44.8,
+    "load_percentage": 36,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_VCB_FEED_B4": {
+    "status": "NORMAL",
+    "voltage": 219.2,
+    "current": 63.5,
+    "warning_level": "LOW",
+    "temperature": 33.4,
+    "load_percentage": 50,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_PANEL_MCCA_4": {
+    "status": "NORMAL",
+    "voltage": 241.2,
+    "current": 33.3,
+    "warning_level": "MID",
+    "temperature": 40.7,
+    "load_percentage": 53,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_PANEL_MCCB_4": {
+    "status": "WARN",
+    "voltage": 213.5,
+    "current": 214.3,
+    "warning_level": "LOW",
+    "temperature": 87.5,
+    "load_percentage": 1,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_PUMP_7": {
+    "status": "NORMAL",
+    "voltage": 215.2,
+    "current": 154.2,
+    "warning_level": "LOW",
+    "temperature": 74.4,
+    "load_percentage": 79,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_PUMP_8": {
+    "status": "WARN",
+    "voltage": 217.8,
+    "current": 242.2,
+    "warning_level": "HIGH",
+    "temperature": 42.6,
+    "load_percentage": 88,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_FAN_7": {
+    "status": "NORMAL",
+    "voltage": 237.6,
+    "current": 97.7,
+    "warning_level": "NONE",
+    "temperature": 57.6,
+    "load_percentage": 85,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_FAN_8": {
+    "status": "FAIL",
+    "voltage": 233.3,
+    "current": 109.2,
+    "warning_level": "LOW",
+    "temperature": 52.5,
+    "load_percentage": 74,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_TR_LV_4": {
+    "status": "FAIL",
+    "voltage": 219.2,
+    "current": 123.6,
+    "warning_level": "MID",
+    "temperature": 42.1,
+    "load_percentage": 58,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_PANEL_ESS_4": {
+    "status": "WARN",
+    "voltage": 233.7,
+    "current": 264.5,
+    "warning_level": "MID",
+    "temperature": 38.5,
+    "load_percentage": 19,
+    "last_update": "2025-12-10 01:41:47"
+  },
+  "EQP_LOAD_ESS_4": {
+    "status": "NORMAL",
+    "voltage": 222.7,
+    "current": 266.5,
+    "warning_level": "NONE",
+    "temperature": 71.6,
+    "load_percentage": 18,
+    "last_update": "2025-12-10 01:41:47"
+  }
+}
