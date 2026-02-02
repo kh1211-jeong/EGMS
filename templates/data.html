@@ -84,6 +84,12 @@
   }
 
   .eqp-status { margin-top:6px; font-size:11px; color:#a5b4fc; text-align:right; }
+
+  /* ▼ (추가) 선택 셀 하이라이트 (UI 톤 유지, 기능만 보강) */
+  .eqp-cell-input.is-selected {
+    outline: 2px solid rgba(59,130,246,0.75);
+    box-shadow: 0 0 0 1px rgba(59,130,246,0.35);
+  }
 </style>
 {% endblock %}
 
@@ -159,6 +165,18 @@
 
 {% block scripts %}
 <script>
+  /********************************************************************
+   * data.html (TRND)
+   * - UI는 그대로, JS만 DB 기반 API 전제로 재구성
+   * - 엔드포인트는 기존 유지:
+   *   GET  /api/equipment-data
+   *   POST /api/equipment-data
+   *   POST /api/equipment-data/import
+   *   GET  /api/equipment-data/export
+   *
+   * - Excel-like: 다중 셀 복사/붙여넣기 지원
+   ********************************************************************/
+
   let dataItems = [];
 
   const tbody = document.getElementById("data-tbody");
@@ -167,7 +185,38 @@
   const globalSearchBtn = document.getElementById("eqp-global-search-btn");
   const filterInputs = Array.from(document.querySelectorAll(".eqp-filter-input"));
 
-  /* ====== FILTERING ====== */
+  // ▼ 자동 새로고침(5초) 토글용: 저장/붙여넣기 중에는 잠시 멈추고 싶을 수 있음
+  let autoRefreshTimer = null;
+  let isBusy = false;
+
+  // ▼ 선택 영역(복사/붙여넣기)
+  //    selected = { r: rowIndex, c: colIndex } (0-based, tbody 기준)
+  let selected = { r: 0, c: 0 };
+
+  // 열 정의 (렌더 순서/키)
+  const COLUMNS = [
+    { key: "eqp_no",        readOnly: true  },
+    { key: "eqp_name",      readOnly: true  },
+    { key: "status",        readOnly: false },
+    { key: "voltage",       readOnly: false },
+    { key: "current",       readOnly: false },
+    { key: "temperature",   readOnly: false },
+    { key: "load_rate",     readOnly: false },
+    { key: "warning_level", readOnly: false },
+    { key: "updated_at",    readOnly: false },
+  ];
+
+  function setStatus(msg) {
+    statusEl.textContent = msg;
+  }
+
+  function safeText(v) {
+    return (v === null || v === undefined) ? "" : String(v);
+  }
+
+  /* =========================
+   * FILTERING
+   * ========================= */
   function filterTable() {
     const global = (globalSearchEl.value || "").trim().toLowerCase();
     const colFilters = filterInputs.map(i => (i.value || "").trim().toLowerCase());
@@ -189,6 +238,7 @@
       colFilters.forEach((val, idx) => {
         if (!val) return;
         const cell = cells[idx];
+        if (!cell) return;
         const input = cell.querySelector("input");
         const text = (input ? input.value : cell.innerText || "").toLowerCase();
         if (!text.includes(val)) visible = false;
@@ -198,84 +248,176 @@
     }
   }
 
-  /* ====== RENDER TABLE ====== */
+  /* =========================
+   * SELECTION UI
+   * ========================= */
+  function clearSelectionUI() {
+    tbody.querySelectorAll(".eqp-cell-input.is-selected").forEach(el => {
+      el.classList.remove("is-selected");
+    });
+  }
+
+  function applySelectionUI() {
+    clearSelectionUI();
+    const cellInput = getCellInput(selected.r, selected.c);
+    if (cellInput) cellInput.classList.add("is-selected");
+  }
+
+  function clampSelection() {
+    const rMax = Math.max(0, (tbody.rows.length || 1) - 1);
+    const cMax = COLUMNS.length - 1;
+    selected.r = Math.min(Math.max(0, selected.r), rMax);
+    selected.c = Math.min(Math.max(0, selected.c), cMax);
+  }
+
+  function getCellInput(r, c) {
+    const row = tbody.rows[r];
+    if (!row) return null;
+    const td = row.cells[c];
+    if (!td) return null;
+    return td.querySelector("input");
+  }
+
+  function setSelectedCell(r, c, focus = true) {
+    selected = { r, c };
+    clampSelection();
+    applySelectionUI();
+    if (focus) {
+      const inp = getCellInput(selected.r, selected.c);
+      if (inp) inp.focus();
+    }
+  }
+
+  /* =========================
+   * RENDER TABLE
+   * ========================= */
   function renderTable() {
     tbody.innerHTML = "";
 
-    dataItems.forEach((item, idx) => {
+    dataItems.forEach((item, rowIdx) => {
       const tr = document.createElement("tr");
 
-      function makeCell(key, readOnly=false) {
+      COLUMNS.forEach((col, colIdx) => {
         const td = document.createElement("td");
         const input = document.createElement("input");
         input.className = "eqp-cell-input";
-        input.value = item[key] ?? "";
-        input.readOnly = readOnly;
-        input.dataset.idx = idx;
-        input.dataset.field = key;
-        input.onchange = (e) => {
-          const i = Number(e.target.dataset.idx);
-          const f = e.target.dataset.field;
-          dataItems[i][f] = e.target.value;
-          filterTable();
-        };
-        td.appendChild(input);
-        return td;
-      }
+        input.value = safeText(item[col.key]);
+        input.readOnly = !!col.readOnly;
 
-      tr.appendChild(makeCell("eqp_no", true));
-      tr.appendChild(makeCell("eqp_name", true));
-      tr.appendChild(makeCell("status"));
-      tr.appendChild(makeCell("voltage"));
-      tr.appendChild(makeCell("current"));
-      tr.appendChild(makeCell("temperature"));
-      tr.appendChild(makeCell("load_rate"));
-      tr.appendChild(makeCell("warning_level"));
-      tr.appendChild(makeCell("updated_at"));
+        // 위치 메타
+        input.dataset.r = rowIdx;
+        input.dataset.c = colIdx;
+        input.dataset.key = col.key;
+
+        // 클릭 시 선택
+        input.addEventListener("mousedown", () => {
+          setSelectedCell(rowIdx, colIdx, false);
+        });
+        input.addEventListener("focus", () => {
+          setSelectedCell(rowIdx, colIdx, false);
+        });
+
+        // 변경 반영
+        input.addEventListener("change", (e) => {
+          const r = Number(e.target.dataset.r);
+          const key = e.target.dataset.key;
+          dataItems[r][key] = e.target.value;
+          filterTable();
+        });
+
+        td.appendChild(input);
+        tr.appendChild(td);
+      });
 
       tbody.appendChild(tr);
     });
 
+    // 렌더 후 필터 유지
     filterTable();
+
+    // 렌더 후 선택 복구
+    clampSelection();
+    applySelectionUI();
   }
 
-  /* ====== LOAD ====== */
-  async function loadData() {
-    statusEl.textContent = "데이터 불러오는 중…";
-
-    const res = await fetch("/api/equipment-data");
+  /* =========================
+   * API HELPERS (DB 기반)
+   * ========================= */
+  async function apiGetJSON(url) {
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
-      statusEl.textContent = "데이터를 가져오지 못했습니다.";
-      return;
+      const txt = await res.text().catch(() => "");
+      throw new Error(`GET ${url} failed: ${res.status} ${txt}`);
     }
-
-    const data = await res.json();
-    dataItems = data.items || [];
-
-    renderTable();
-    statusEl.textContent = `총 ${dataItems.length}개 데이터 로드`;
+    return res.json();
   }
 
-  /* ====== SAVE ====== */
-  async function saveData() {
-    statusEl.textContent = "저장 중…";
-
-    const res = await fetch("/api/equipment-data", {
+  async function apiPostJSON(url, payload) {
+    const res = await fetch(url, {
       method: "POST",
       headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ items: dataItems })
+      body: JSON.stringify(payload)
     });
-
     if (!res.ok) {
-      statusEl.textContent = "저장 실패";
-      return;
+      const txt = await res.text().catch(() => "");
+      throw new Error(`POST ${url} failed: ${res.status} ${txt}`);
     }
-
-    const data = await res.json();
-    statusEl.textContent = `저장 완료 · ${data.count}개 반영`;
+    return res.json();
   }
 
-  /* ====== IMPORT / EXPORT ====== */
+  /* =========================
+   * LOAD / SAVE
+   * ========================= */
+  async function loadData() {
+    if (isBusy) return; // 붙여넣기/저장 중이면 자동갱신 스킵
+    setStatus("데이터 불러오는 중…");
+
+    try {
+      const data = await apiGetJSON("/api/equipment-data");
+      dataItems = (data.items || []).map(row => ({
+        eqp_no:        row.eqp_no,
+        eqp_name:      row.eqp_name,
+        status:        row.status,
+        voltage:       row.voltage,
+        current:       row.current,
+        temperature:   row.temperature,
+        load_rate:     row.load_rate,
+        warning_level: row.warning_level,
+        updated_at:    row.updated_at,
+      }));
+
+      renderTable();
+      setStatus(`총 ${dataItems.length}개 데이터 로드`);
+    } catch (err) {
+      console.error(err);
+
+      // API 미구현 상태에서도 화면이 깨지지 않게: 빈 테이블 표시
+      dataItems = dataItems || [];
+      renderTable();
+
+      setStatus("데이터를 가져오지 못했습니다. (API 미구현/에러 가능)");
+    }
+  }
+
+  async function saveData() {
+    isBusy = true;
+    setStatus("저장 중…");
+
+    try {
+      const payload = { items: dataItems };
+      const data = await apiPostJSON("/api/equipment-data", payload);
+      setStatus(`저장 완료 · ${data.count ?? dataItems.length}개 반영`);
+    } catch (err) {
+      console.error(err);
+      setStatus("저장 실패 (API 미구현/에러 가능)");
+    } finally {
+      isBusy = false;
+    }
+  }
+
+  /* =========================
+   * IMPORT / EXPORT
+   * ========================= */
   function openImportDialog() {
     const inp = document.getElementById("data-file-input");
     inp.value = "";
@@ -286,31 +428,171 @@
     const file = e.target.files[0];
     if (!file) return;
 
-    statusEl.textContent = "엑셀 가져오는 중…";
+    isBusy = true;
+    setStatus("엑셀 가져오는 중…");
 
-    const form = new FormData();
-    form.append("file", file);
+    try {
+      const form = new FormData();
+      form.append("file", file);
 
-    const res = await fetch("/api/equipment-data/import", {
-      method: "POST",
-      body: form,
-    });
+      const res = await fetch("/api/equipment-data/import", {
+        method: "POST",
+        body: form,
+      });
 
-    if (!res.ok) {
-      statusEl.textContent = "가져오기 실패";
-      return;
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(`import failed: ${res.status} ${txt}`);
+      }
+
+      const data = await res.json();
+      setStatus(`엑셀 반영 완료 · ${data.count ?? 0}`);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      setStatus("가져오기 실패 (API 미구현/에러 가능)");
+    } finally {
+      isBusy = false;
     }
-
-    const data = await res.json();
-    statusEl.textContent = `엑셀 반영 완료 · ${data.count}`;
-    loadData();
   }
 
   function exportData() {
     window.location.href = "/api/equipment-data/export";
   }
 
-  /* ====== EVENTS ====== */
+  /* =========================
+   * COPY / PASTE (Excel-like)
+   * - Ctrl+C: 선택 셀 기준으로 "행 전체"가 아니라
+   *           "선택 영역"을 TSV로 복사(현재는 단일 셀/붙여넣기 중심)
+   * - Ctrl+V: TSV/CSV 텍스트를 현재 선택 셀부터 채워넣기
+   *
+   * ※ 사용자가 엑셀에서 여러 셀 복사 후 붙여넣기하면
+   *    줄바꿈(\n) + 탭(\t) 형식으로 들어오는게 일반적
+   * ========================= */
+  function parseClipboardText(text) {
+    // Windows/Excel: \r\n, Mac: \n
+    const rows = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+    // 끝에 빈 줄이 붙는 경우 제거
+    while (rows.length && rows[rows.length - 1] === "") rows.pop();
+    return rows.map(r => r.split("\t"));
+  }
+
+  async function handlePasteFromClipboard(text) {
+    const grid = parseClipboardText(text);
+    if (!grid.length) return;
+
+    // 붙여넣기 시작 좌표
+    const startR = selected.r;
+    const startC = selected.c;
+
+    // readOnly 컬럼은 스킵하면서 채울 수도 있으나,
+    // 여기선 "붙여넣기 대상 셀 기준으로" readOnly면 그대로 건너뛰지 않고 그냥 무시 처리
+    for (let rr = 0; rr < grid.length; rr++) {
+      const r = startR + rr;
+      if (r >= dataItems.length) break;
+
+      for (let cc = 0; cc < grid[rr].length; cc++) {
+        const c = startC + cc;
+        if (c >= COLUMNS.length) break;
+
+        const col = COLUMNS[c];
+        if (col.readOnly) continue;
+
+        const val = grid[rr][cc];
+        dataItems[r][col.key] = val;
+
+        // 실제 input에도 즉시 반영
+        const inp = getCellInput(r, c);
+        if (inp) inp.value = val;
+      }
+    }
+
+    // 필터 상태 갱신
+    filterTable();
+  }
+
+  async function handleCopyToClipboard() {
+    // 현재는 "선택 셀 1개"를 복사 (필요하면 영역 확장 가능)
+    const r = selected.r, c = selected.c;
+    const col = COLUMNS[c];
+    const val = safeText(dataItems?.[r]?.[col.key]);
+
+    try {
+      await navigator.clipboard.writeText(val);
+      setStatus("복사 완료");
+      // 짧게 메시지 유지 후 원상복구는 굳이 안 함(요구 없음)
+    } catch (err) {
+      console.warn("clipboard write failed", err);
+    }
+  }
+
+  function attachGridKeyHandlers() {
+    // tbody 내부 input들에서 키보드 네비게이션/붙여넣기
+    tbody.addEventListener("keydown", async (e) => {
+      const key = e.key;
+
+      // Ctrl/Cmd + C / V
+      const isMac = navigator.platform.toUpperCase().includes("MAC");
+      const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
+
+      if (ctrlOrCmd && (key === "c" || key === "C")) {
+        e.preventDefault();
+        await handleCopyToClipboard();
+        return;
+      }
+
+      if (ctrlOrCmd && (key === "v" || key === "V")) {
+        // 기본 paste 막고 클립보드 텍스트 읽기
+        e.preventDefault();
+        try {
+          isBusy = true;
+          const text = await navigator.clipboard.readText();
+          await handlePasteFromClipboard(text);
+          setStatus("붙여넣기 완료");
+        } catch (err) {
+          console.warn("clipboard read failed", err);
+          setStatus("붙여넣기 실패 (브라우저 권한 확인 필요)");
+        } finally {
+          isBusy = false;
+        }
+        return;
+      }
+
+      // 방향키 이동
+      if (key === "ArrowUp" || key === "ArrowDown" || key === "ArrowLeft" || key === "ArrowRight") {
+        e.preventDefault();
+        if (key === "ArrowUp") selected.r -= 1;
+        if (key === "ArrowDown") selected.r += 1;
+        if (key === "ArrowLeft") selected.c -= 1;
+        if (key === "ArrowRight") selected.c += 1;
+        setSelectedCell(selected.r, selected.c, true);
+        return;
+      }
+
+      // Enter: 아래로 이동 (엑셀 느낌)
+      if (key === "Enter") {
+        e.preventDefault();
+        selected.r += 1;
+        setSelectedCell(selected.r, selected.c, true);
+      }
+    });
+  }
+
+  /* =========================
+   * AUTO REFRESH
+   * ========================= */
+  function startAutoRefresh() {
+    stopAutoRefresh();
+    autoRefreshTimer = setInterval(loadData, 5000);
+  }
+  function stopAutoRefresh() {
+    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+  }
+
+  /* =========================
+   * EVENTS
+   * ========================= */
   globalSearchBtn.onclick = filterTable;
   globalSearchEl.onkeydown = (e) => { if (e.key==="Enter") filterTable(); };
   filterInputs.forEach(inp => inp.oninput = filterTable);
@@ -320,8 +602,12 @@
   document.getElementById("btn-data-import").onclick = openImportDialog;
   document.getElementById("data-file-input").onchange = handleImportChange;
 
+  // 그리드 키 핸들러
+  attachGridKeyHandlers();
+
+  // 최초 로드
   loadData();
-  setInterval(loadData, 5000);
+  startAutoRefresh();
 
 </script>
 {% endblock %}

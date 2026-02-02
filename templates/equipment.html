@@ -277,26 +277,70 @@
 
 {% block scripts %}
 <script>
+  /**
+   * UI는 유지하고, 동작만 DB 연동 전제로 강화한 equipment.js 로직입니다.
+   * - GET  /api/equipments
+   * - POST /api/equipments      (전체 items 저장)
+   * - POST /api/equipments/import (csv 업로드)
+   * - GET  /api/equipments/export (csv 다운로드)
+   *
+   * 추가: 엑셀식 다중 셀 붙여넣기 지원
+   * - 어떤 셀(input)에서 Ctrl+V 하면,
+   *   클립보드가 줄바꿈/탭/콤마를 포함할 경우, 현재 셀을 시작점으로 테이블에 분배합니다.
+   */
+
   let eqpItems = [];
 
   const tbody            = document.getElementById("eqp-tbody");
   const statusEl         = document.getElementById("eqp-status");
   const globalSearchEl   = document.getElementById("eqp-global-search");
   const globalSearchBtn  = document.getElementById("eqp-global-search-btn");
-  const filterInputsNode = document.querySelectorAll(".eqp-filter-input");
+  const filterInputs     = Array.from(document.querySelectorAll(".eqp-filter-input"));
 
-  const filterInputs = Array.from(filterInputsNode);
+  // 붙여넣기 시작점(현재 포커스된 셀의 row/col)
+  let activeCell = { row: 0, col: 0 };
+
+  // 테이블 컬럼 키(표 순서 고정)
+  const COLS = [
+    { key: "eqp_no"        },
+    { key: "eqp_name"      },
+    { key: "type"          },
+    { key: "building"      },
+    { key: "location"      },
+    { key: "parent_eqp_no" },
+  ];
+
+  // --- 유틸: API 응답이 스키마가 달라도 최대한 흡수 ---
+  function normalizeItem(raw) {
+    const r = raw || {};
+    // 백엔드가 TB_TAG_INFO 그대로 내릴 수도 있어 alias 대응
+    // (예: EQP_NO / EQP_NAME / EQUIPMENT_TYPE / BUILDING / LOCATION / PARENT_EQP_NO)
+    const pick = (a, b, c) => (r[a] ?? r[b] ?? r[c] ?? "");
+    return {
+      eqp_no:        pick("eqp_no", "EQP_NO", "eqpNo"),
+      eqp_name:      pick("eqp_name", "EQP_NAME", "eqpName"),
+      type:          pick("type", "TYPE", "equipment_type"),
+      building:      pick("building", "BUILDING", "bldg"),
+      location:      pick("location", "LOCATION", "loc"),
+      parent_eqp_no: pick("parent_eqp_no", "PARENT_EQP_NO", "parentEqpNo"),
+    };
+  }
+
+  function normalizeList(list) {
+    if (!Array.isArray(list)) return [];
+    return list.map(normalizeItem);
+  }
 
   // 대표 검색 + 컬럼별 필터 적용
   function filterTable() {
-    const globalValue = (globalSearchEl.value || "").trim().toLowerCase();
+    const globalValue   = (globalSearchEl.value || "").trim().toLowerCase();
     const columnFilters = filterInputs.map(inp => (inp.value || "").trim().toLowerCase());
 
     for (const row of tbody.rows) {
       const cells = row.cells;
       let show = true;
 
-      // 대표 검색: 한 행 전체 텍스트 기준
+      // 대표 검색: 행 전체 텍스트 기준
       if (globalValue) {
         let rowText = "";
         for (let i = 0; i < cells.length; i++) {
@@ -305,9 +349,7 @@
           rowText += " " + (text || "");
         }
         rowText = rowText.toLowerCase();
-        if (!rowText.includes(globalValue)) {
-          show = false;
-        }
+        if (!rowText.includes(globalValue)) show = false;
       }
 
       // 컬럼별 필터
@@ -317,65 +359,187 @@
         if (!cell) return;
         const input = cell.querySelector("input");
         const text  = (input ? input.value : cell.innerText || "").toLowerCase();
-        if (!text.includes(val)) {
-          show = false;
-        }
+        if (!text.includes(val)) show = false;
       });
 
       row.style.display = show ? "" : "none";
     }
   }
 
+  // --- 렌더링 ---
   function renderEqpTable() {
     tbody.innerHTML = "";
 
-    eqpItems.forEach((item, idx) => {
+    eqpItems.forEach((item, rowIdx) => {
       const tr = document.createElement("tr");
 
-      function makeCell(key, readOnly = false) {
+      COLS.forEach((col, colIdx) => {
         const td = document.createElement("td");
         const input = document.createElement("input");
         input.className = "eqp-cell-input";
-        input.value = item[key] ?? "";
-        input.readOnly = readOnly;
-        input.dataset.index = idx;
-        input.dataset.field = key;
+        input.value = item[col.key] ?? "";
+        input.dataset.row = String(rowIdx);
+        input.dataset.col = String(colIdx);
+        input.dataset.key = col.key;
+
+        // 포커스된 셀을 activeCell로 기록
+        input.addEventListener("focus", (e) => {
+          activeCell.row = Number(e.target.dataset.row || "0");
+          activeCell.col = Number(e.target.dataset.col || "0");
+        });
+
+        // 값 변경 반영
         input.addEventListener("change", (e) => {
-          const i = Number(e.target.dataset.index);
-          const f = e.target.dataset.field;
-          eqpItems[i][f] = e.target.value;
-          // 값이 바뀌면 현재 필터 조건 기준으로 다시 표시
+          const r = Number(e.target.dataset.row || "0");
+          const k = e.target.dataset.key;
+          eqpItems[r][k] = e.target.value;
           filterTable();
         });
-        td.appendChild(input);
-        return td;
-      }
 
-      tr.appendChild(makeCell("eqp_no", false));        // 필요하면 true로 EQP_NO 잠글 수 있음
-      tr.appendChild(makeCell("eqp_name", false));
-      tr.appendChild(makeCell("type", false));
-      tr.appendChild(makeCell("building", false));
-      tr.appendChild(makeCell("location", false));
-      tr.appendChild(makeCell("parent_eqp_no", false));
+        // 엑셀식 붙여넣기 (다중 셀)
+        input.addEventListener("paste", async (e) => {
+          // 브라우저 기본 paste를 가로채고 우리가 분배
+          // 단, 단일 값만이면 기본 동작 유지할 수도 있으나,
+          // 전하 요구가 "그리드 전체 복붙"이므로 항상 처리합니다.
+          e.preventDefault();
+
+          let text = "";
+          try {
+            // 표준 클립보드
+            text = (e.clipboardData && e.clipboardData.getData("text")) || "";
+          } catch {
+            // 일부 환경 fallback
+            text = "";
+          }
+
+          if (!text) return;
+
+          // 줄바꿈 포함하거나 탭 포함하면 다중 셀로 분배
+          // 콤마(,)도 지원 (CSV 붙여넣기)
+          const hasMulti =
+            text.includes("\n") || text.includes("\r") || text.includes("\t") || text.includes(",");
+
+          if (!hasMulti) {
+            // 단일 값: 현재 셀에만
+            const r = Number(input.dataset.row || "0");
+            const c = Number(input.dataset.col || "0");
+            const key = COLS[c].key;
+            input.value = text;
+            eqpItems[r][key] = text;
+            filterTable();
+            return;
+          }
+
+          // 행 분리 (빈 마지막 줄 제거)
+          const rows = text
+            .replace(/\r\n/g, "\n")
+            .replace(/\r/g, "\n")
+            .split("\n")
+            .filter((line, idx, arr) => !(idx === arr.length - 1 && line.trim() === ""));
+
+          // 열 분리: 탭 우선, 없으면 콤마
+          const grid = rows.map(line => {
+            if (line.includes("\t")) return line.split("\t");
+            return line.split(","); // CSV 스타일
+          });
+
+          applyGridPaste(grid, Number(input.dataset.row || "0"), Number(input.dataset.col || "0"));
+        });
+
+        // 엔터로 다음 행 같은 열로 이동(엑셀 느낌)
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            const r = Number(input.dataset.row || "0");
+            const c = Number(input.dataset.col || "0");
+            focusCell(r + 1, c);
+          }
+          // 방향키 이동
+          if (e.key === "ArrowDown") { e.preventDefault(); focusCell(Number(input.dataset.row||0) + 1, Number(input.dataset.col||0)); }
+          if (e.key === "ArrowUp")   { e.preventDefault(); focusCell(Number(input.dataset.row||0) - 1, Number(input.dataset.col||0)); }
+          if (e.key === "ArrowRight"){ /* 기본 커서 이동도 있으나, 끝에서 다음 셀 이동만 지원 */
+            // caret이 끝이면 다음 셀
+            const el = e.target;
+            if (el.selectionStart === el.value.length && el.selectionEnd === el.value.length) {
+              e.preventDefault();
+              focusCell(Number(input.dataset.row||0), Number(input.dataset.col||0) + 1);
+            }
+          }
+          if (e.key === "ArrowLeft"){ 
+            const el = e.target;
+            if (el.selectionStart === 0 && el.selectionEnd === 0) {
+              e.preventDefault();
+              focusCell(Number(input.dataset.row||0), Number(input.dataset.col||0) - 1);
+            }
+          }
+        });
+
+        td.appendChild(input);
+        tr.appendChild(td);
+      });
 
       tbody.appendChild(tr);
     });
 
-    // 테이블 새로 그린 뒤에도 필터 상태 유지
     filterTable();
   }
 
+  function focusCell(row, col) {
+    if (row < 0) row = 0;
+    if (col < 0) col = 0;
+    if (col >= COLS.length) col = COLS.length - 1;
+    if (row >= eqpItems.length) row = eqpItems.length - 1;
+
+    const selector = `input.eqp-cell-input[data-row="${row}"][data-col="${col}"]`;
+    const el = tbody.querySelector(selector);
+    if (el) el.focus();
+  }
+
+  function applyGridPaste(grid, startRow, startCol) {
+    // startRow/startCol부터 grid를 분배하여 eqpItems에 반영
+    for (let r = 0; r < grid.length; r++) {
+      const targetRow = startRow + r;
+      if (targetRow >= eqpItems.length) break;
+
+      for (let c = 0; c < grid[r].length; c++) {
+        const targetCol = startCol + c;
+        if (targetCol >= COLS.length) break;
+
+        const key = COLS[targetCol].key;
+        const value = grid[r][c];
+
+        eqpItems[targetRow][key] = value;
+
+        // DOM에도 반영(렌더 재호출 없이)
+        const selector = `input.eqp-cell-input[data-row="${targetRow}"][data-col="${targetCol}"]`;
+        const el = tbody.querySelector(selector);
+        if (el) el.value = value;
+      }
+    }
+
+    filterTable();
+    // 붙여넣기 완료 후, 마지막 셀로 포커스 이동(편의)
+    const endRow = Math.min(startRow + grid.length - 1, eqpItems.length - 1);
+    const endCol = Math.min(startCol + (grid[0]?.length || 1) - 1, COLS.length - 1);
+    focusCell(endRow, endCol);
+  }
+
+  // --- API ---
   async function loadEquipments() {
     statusEl.textContent = "설비 정보를 불러오는 중입니다...";
 
     try {
-      const res = await fetch("/api/equipments");
+      const res = await fetch("/api/equipments", { cache: "no-store" });
       if (!res.ok) {
         statusEl.textContent = "설비 정보를 가져오지 못했습니다.";
         return;
       }
       const data = await res.json();
-      eqpItems = data.items || [];
+
+      // data.items가 표준이지만, 혹시 다른 키를 쓰면 방어
+      const items = data.items ?? data.data ?? data.rows ?? [];
+      eqpItems = normalizeList(items);
+
       renderEqpTable();
       statusEl.textContent = `총 ${eqpItems.length}개 설비를 불러왔습니다.`;
     } catch (err) {
@@ -388,17 +552,25 @@
     statusEl.textContent = "변경 내용을 저장 중입니다...";
 
     try {
+      // 저장 시에도 표준 키로 보냄
+      const payload = { items: eqpItems };
+
       const res = await fetch("/api/equipments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: eqpItems }),
+        body: JSON.stringify(payload),
       });
+
       if (!res.ok) {
+        const txt = await res.text().catch(() => "");
         statusEl.textContent = "저장에 실패했습니다.";
+        console.warn("save failed", txt);
         return;
       }
-      const data = await res.json();
-      statusEl.textContent = `저장 완료 · ${data.count ?? eqpItems.length}개 설비 반영`;
+
+      const data = await res.json().catch(() => ({}));
+      const cnt  = data.count ?? eqpItems.length;
+      statusEl.textContent = `저장 완료 · ${cnt}개 설비 반영`;
     } catch (err) {
       console.error(err);
       statusEl.textContent = "저장 중 오류가 발생했습니다.";
@@ -406,6 +578,7 @@
   }
 
   function exportEquipments() {
+    // CSV 다운로드 유지
     window.location.href = "/api/equipments/export";
   }
 
@@ -431,11 +604,13 @@
       });
 
       if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        console.warn("import failed", txt);
         statusEl.textContent = "엑셀 데이터를 가져오는 데 실패했습니다.";
         return;
       }
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       statusEl.textContent = `엑셀 반영 완료 · ${data.count ?? 0}개 설비 반영`;
       await loadEquipments();
     } catch (err) {
@@ -444,7 +619,7 @@
     }
   }
 
-  // 이벤트 바인딩
+  // --- 이벤트 바인딩 ---
   document.getElementById("btn-eqp-save").addEventListener("click", saveEquipments);
   document.getElementById("btn-eqp-export").addEventListener("click", exportEquipments);
   document.getElementById("btn-eqp-import").addEventListener("click", openImportDialog);
@@ -453,9 +628,7 @@
   // 대표 검색: 버튼 / Enter
   globalSearchBtn.addEventListener("click", filterTable);
   globalSearchEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      filterTable();
-    }
+    if (e.key === "Enter") filterTable();
   });
 
   // 컬럼별 필터: 입력 즉시 적용
@@ -463,7 +636,7 @@
     inp.addEventListener("input", filterTable);
   });
 
-  // 페이지 진입 시 전체 설비 로드 (초기에는 전체 행이 그대로 보임)
+  // 페이지 진입 시 전체 설비 로드
   loadEquipments();
 </script>
 {% endblock %}

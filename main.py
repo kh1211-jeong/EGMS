@@ -1,25 +1,32 @@
-# main.py
-from fastapi import FastAPI, Request, Body, UploadFile, File
-from fastapi.responses import HTMLResponse, StreamingResponse
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
-from topology_provider import get_topology
-from equipment_provider import list_equipments, update_equipments
-from data_provider import list_data, bulk_update, random_update_all
 
-import io
-import csv
-import asyncio
+# -----------------------------
+# App / Templates / Static
+# -----------------------------
 
 app = FastAPI(title="EGMS")
 
-templates = Jinja2Templates(directory="templates")
+BASE_DIR = Path(__file__).resolve().parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+# If you have /static (css/js/img) folder, mount it. Safe even if folder doesn't exist.
+static_dir = BASE_DIR / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
 # -----------------------------
-# UI 라우트
+# UI Routes
 # -----------------------------
-
 
 @app.get("/", response_class=HTMLResponse)
 @app.get("/ui/home", response_class=HTMLResponse)
@@ -29,6 +36,8 @@ def ui_home(request: Request):
         {
             "request": request,
             "app_title": "EGMS",
+            "header_badge": "HOME",
+            "current_page": "home",
         },
     )
 
@@ -39,7 +48,9 @@ def ui_topology(request: Request):
         "topology.html",
         {
             "request": request,
-            "app_title": "EGMS",
+            "app_title": "EGMS · 연결 정보",
+            "header_badge": "TOPOLOGY",
+            "current_page": "topology",
         },
     )
 
@@ -50,11 +61,14 @@ def ui_equipment(request: Request):
         "equipment.html",
         {
             "request": request,
-            "app_title": "EGMS",
+            "app_title": "EGMS · 기준정보",
+            "header_badge": "EQUIPMENT",
+            "current_page": "equipment",
         },
     )
 
-@app.get("/ui/data")
+
+@app.get("/ui/data", response_class=HTMLResponse)
 def ui_data(request: Request):
     return templates.TemplateResponse(
         "data.html",
@@ -66,259 +80,119 @@ def ui_data(request: Request):
         },
     )
 
-@app.get("/ui/settings")
-def ui_data_panel(request: Request):
+
+@app.get("/ui/settings", response_class=HTMLResponse)
+def ui_settings(request: Request):
     return templates.TemplateResponse(
         "settings.html",
         {
             "request": request,
-            "app_title": "EGMS · 데이터 현황",
-            "header_badge": "Settings",
+            "app_title": "EGMS · 설정",
+            "header_badge": "SETTINGS",
             "current_page": "settings",
         },
     )
 
-# -----------------------------
-# Topology API
-# -----------------------------
-
-
-@app.get("/api/topology")
-def api_topology():
-    data = get_topology()
-    return data
-
 
 # -----------------------------
-# Equipment API (JSON 기반 CRUD + CSV Import/Export)
+# Minimal APIs (TEMP)
+# - Purpose: Make UI grids render (no 404/500) while providers/DB are being wired.
+# - Later: replace these with real providers/DB implementations.
 # -----------------------------
-
 
 @app.get("/api/equipments")
 def api_get_equipments():
     """
-    설비 리스트 조회 (JSON)
+    TEMP stub to prevent UI from being empty.
+    equipment.html expects: { items: [ {eqp_no, eqp_name, type, building, location, parent_eqp_no}, ... ] }
+    Enable with EGMS_STUB_API=1 (default ON).
     """
-    return {"items": list_equipments()}
+    enabled = os.getenv("EGMS_STUB_API", "1").strip() == "1"
+    if not enabled:
+        return JSONResponse(status_code=404, content={"detail": "stub api disabled"})
 
-@app.post("/api/equipments")
-def api_update_equipments(payload: dict = Body(...)):
-    """
-    설비 리스트 갱신 (파일럿용)
-    요청 바디: { "items": [ {eqp_no, eqp_name, ...}, ... ] }
-    """
-    items = payload.get("items", [])
-    if not isinstance(items, list):
-        items = []
-
-    update_equipments(items)
-    return {"ok": True, "count": len(items)}
-
-
-@app.get("/api/equipments/export")
-def api_export_equipments():
-    """
-    설비 리스트를 CSV(엑셀 호환)로 내보내기
-    """
-    items = list_equipments()
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    # 헤더
-    writer.writerow(
-        ["EQP_NO", "EQP_NAME", "TYPE", "BUILDING", "LOCATION", "PARENT_EQP_NO"]
-    )
-
-    # 데이터
-    for item in items:
-        writer.writerow(
-            [
-                item.get("eqp_no", ""),
-                item.get("eqp_name", ""),
-                item.get("type", ""),
-                item.get("building", ""),
-                item.get("location", ""),
-                item.get("parent_eqp_no", ""),
-            ]
-        )
-
-    output.seek(0)
-
-    return StreamingResponse(
-        output,
-        media_type="text/csv",
-        headers={"Content-Disposition": 'attachment; filename="equipments.csv"'},
-    )
-
-
-@app.post("/api/equipments/import")
-async def api_import_equipments(file: UploadFile = File(...)):
-    """
-    CSV(엑셀) 파일로부터 설비 리스트 가져오기.
-    컬럼: EQP_NO, EQP_NAME, TYPE, BUILDING, LOCATION, PARENT_EQP_NO
-    """
-    raw = await file.read()
-    text = raw.decode("utf-8-sig")  # BOM 있어도 안전하게 처리
-
-    reader = csv.DictReader(io.StringIO(text))
-    items = []
-
-    for row in reader:
-        items.append(
-            {
-                "eqp_no": row.get("EQP_NO", "").strip(),
-                "eqp_name": row.get("EQP_NAME", "").strip(),
-                "type": row.get("TYPE", "").strip(),
-                "building": row.get("BUILDING", "").strip(),
-                "location": row.get("LOCATION", "").strip(),
-                "parent_eqp_no": row.get("PARENT_EQP_NO", "").strip(),
-            }
-        )
-
-    update_equipments(items)
-    return {"ok": True, "count": len(items)}
+    items = [
+        {
+            "eqp_no": "00000001",
+            "eqp_name": "VCB_2F11A",
+            "type": "VCB",
+            "building": "B1",
+            "location": "E/R",
+            "parent_eqp_no": "00000000",
+        },
+        {
+            "eqp_no": "00000002",
+            "eqp_name": "BTR_2F11",
+            "type": "BTR",
+            "building": "B1",
+            "location": "E/R",
+            "parent_eqp_no": "00000001",
+        },
+        {
+            "eqp_no": "00000003",
+            "eqp_name": "LTR_2F11",
+            "type": "LTR",
+            "building": "B1",
+            "location": "E/R",
+            "parent_eqp_no": "00000002",
+        },
+    ]
+    return {"items": items}
 
 
 @app.get("/api/equipment-data")
 def api_equipment_data():
+    """
+    TEMP stub to prevent UI from being empty.
+    data.html expects: { items: [ {eqp_no, eqp_name, status, voltage, current, temperature, load_rate, warning_level, updated_at}, ... ] }
+    Enable with EGMS_STUB_API=1 (default ON).
+    """
+    enabled = os.getenv("EGMS_STUB_API", "1").strip() == "1"
+    if not enabled:
+        return JSONResponse(status_code=404, content={"detail": "stub api disabled"})
 
-    eqps = list_equipments()            # 설비 기본 정보 list
-    data = list_data()                  # 데이터 dict (eqp_no -> 측정값)
-
-    rows = []
-
-    for eqp in eqps:
-        eqp_no = eqp["eqp_no"]
-        d = data.get(eqp_no, {})
-
-        rows.append({
-            "eqp_no": eqp_no,
-            "eqp_name": eqp["eqp_name"],
-            "status": d.get("status", ""),
-            "voltage": d.get("voltage", ""),
-            "current": d.get("current", ""),
-            "temperature": d.get("temperature", ""),
-            "load_rate": d.get("load_percentage", ""),
-            "warning_level": d.get("warning_level", ""),
-            "updated_at": d.get("last_update", "")
-        })
-
+    rows = [
+        {
+            "eqp_no": "00000001",
+            "eqp_name": "VCB_2F11A",
+            "status": "ON",
+            "voltage": "22890",
+            "current": "120",
+            "temperature": "36.2",
+            "load_rate": "48.1",
+            "warning_level": "NORMAL",
+            "updated_at": "2026-02-02 21:00:00",
+        },
+        {
+            "eqp_no": "00000002",
+            "eqp_name": "BTR_2F11",
+            "status": "ON",
+            "voltage": "22890",
+            "current": "115",
+            "temperature": "41.7",
+            "load_rate": "52.0",
+            "warning_level": "NORMAL",
+            "updated_at": "2026-02-02 21:00:00",
+        },
+        {
+            "eqp_no": "00000003",
+            "eqp_name": "LTR_2F11",
+            "status": "ON",
+            "voltage": "380",
+            "current": "380",
+            "temperature": "38.9",
+            "load_rate": "61.3",
+            "warning_level": "WATCH",
+            "updated_at": "2026-02-02 21:00:00",
+        },
+    ]
     return {"items": rows}
 
-@app.post("/api/equipment-data")
-def api_equipment_data_update(payload: dict = Body(...)):
-    """
-    data.html에서 편집한 테이블 데이터를 저장
-    요청 형식: { "items": [ {eqp_no, eqp_name, status, voltage, ...}, ... ] }
-    """
-    items = payload.get("items", [])
-    if not isinstance(items, list):
-        items = []
 
-    data_dict = {}
+# -----------------------------
+# Health check
+# -----------------------------
 
-    for row in items:
-        eqp_no = row.get("eqp_no")
-        if not eqp_no:
-            continue
-
-        data_dict[eqp_no] = {
-            # data_provider 내부 저장 포맷에 맞게 매핑
-            "status": row.get("status", ""),
-            "temperature": row.get("temperature", ""),
-            "load_percentage": row.get("load_rate", ""),   # 이름 매핑 주의
-            "last_update": row.get("updated_at", ""),
-
-            # 추가 필드(옵션)
-            "voltage": row.get("voltage", ""),
-            "current": row.get("current", ""),
-            "warning_level": row.get("warning_level", ""),
-        }
-
-    bulk_update(data_dict)
-    return {"ok": True, "count": len(data_dict)}
-
-@app.get("/api/equipment-data/export")
-def api_equipment_data_export():
-    """
-    data.html용 계측 데이터를 CSV로 내보내기
-    헤더: EQP_NO,EQP_NAME,STATUS,VOLTAGE,CURRENT,TEMPERATURE,LOAD_RATE,WARNING_LEVEL,UPDATED_AT
-    """
-    eqps = list_equipments()
-    data = list_data()
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    writer.writerow([
-        "EQP_NO", "EQP_NAME", "STATUS",
-        "VOLTAGE", "CURRENT", "TEMPERATURE",
-        "LOAD_RATE", "WARNING_LEVEL", "UPDATED_AT"
-    ])
-
-    for eqp in eqps:
-        eqp_no = eqp["eqp_no"]
-        d = data.get(eqp_no, {})
-
-        writer.writerow([
-            eqp_no,
-            eqp["eqp_name"],
-            d.get("status", ""),
-            d.get("voltage", ""),
-            d.get("current", ""),
-            d.get("temperature", ""),
-            d.get("load_percentage", ""),  # 내부는 load_percentage
-            d.get("warning_level", ""),
-            d.get("last_update", ""),
-        ])
-
-    output.seek(0)
-
-    return StreamingResponse(
-        output,
-        media_type="text/csv",
-        headers={"Content-Disposition": 'attachment; filename=\"equipment_data.csv\"'},
-    )
-
-@app.post("/api/equipment-data/import")
-async def api_equipment_data_import(file: UploadFile = File(...)):
-    """
-    data.html에서 업로드한 CSV를 읽어서 equipment_data로 반영
-    컬럼: EQP_NO,EQP_NAME,STATUS,VOLTAGE,CURRENT,TEMPERATURE,LOAD_RATE,WARNING_LEVEL,UPDATED_AT
-    """
-    raw = await file.read()
-    text = raw.decode("utf-8-sig")
-
-    reader = csv.DictReader(io.StringIO(text))
-    data_dict = {}
-
-    for row in reader:
-        eqp_no = (row.get("EQP_NO") or "").strip()
-        if not eqp_no:
-            continue
-
-        data_dict[eqp_no] = {
-            "status": (row.get("STATUS") or "").strip(),
-            "temperature": (row.get("TEMPERATURE") or "").strip(),
-            "load_percentage": (row.get("LOAD_RATE") or "").strip(),
-            "last_update": (row.get("UPDATED_AT") or "").strip(),
-            "voltage": (row.get("VOLTAGE") or "").strip(),
-            "current": (row.get("CURRENT") or "").strip(),
-            "warning_level": (row.get("WARNING_LEVEL") or "").strip(),
-        }
-
-    bulk_update(data_dict)
-    return {"ok": True, "count": len(data_dict)}
-
-@app.on_event("startup")
-async def start_data_updater():
-    """
-    서버가 뜰 때 5초마다 계측값을 랜덤 갱신하는 백그라운드 태스크 시작
-    """
-    async def _worker():
-        while True:
-            random_update_all()   # 5초마다 한 번 호출
-            await asyncio.sleep(5)
-
-    asyncio.create_task(_worker())
+@app.get("/api/health")
+def api_health():
+    return {"ok": True, "app": "EGMS"}
